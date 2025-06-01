@@ -8,20 +8,23 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class ECP_Shortcode {
-    
-    /**
-     * Database-Handler
-     */
-    private $database;
-    
-    /**
-     * Konstruktor
-     */
-    public function __construct() {
-        $this->database = ecp_init()->get_database();
-        $this->init_shortcodes();
-    }
+class ECP_Shortcode
+    {
+        private $database;
+
+        public function __construct($database = null)
+        {
+            $this->database = $database;
+            $this->init_shortcodes();
+        }
+
+        private function get_database()
+        {
+            if (!$this->database) {
+                $this->database = new ECP_Database();
+            }
+            return $this->database;
+        }
     
     /**
      * Shortcodes registrieren

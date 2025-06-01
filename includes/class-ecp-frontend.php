@@ -8,20 +8,24 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-class ECP_Frontend {
+class ECP_Frontend
+    {
+        private $database;
+
+        public function __construct($database = null)
+        {
+            $this->database = $database;
+            $this->init_hooks();
+        }
+
+        private function get_database()
+        {
+            if (!$this->database) {
+                $this->database = new ECP_Database();
+            }
+            return $this->database;
+        }
     
-    /**
-     * Database-Handler
-     */
-    private $database;
-    
-    /**
-     * Konstruktor
-     */
-    public function __construct() {
-        $this->database = ecp_init()->get_database();
-        $this->init_hooks();
-    }
     
     /**
      * Frontend-Hooks initialisieren
