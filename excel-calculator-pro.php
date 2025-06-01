@@ -4,7 +4,7 @@
  * Plugin Name: Excel Calculator Pro
  * Plugin URI: https://samuelbaer.ch/
  * Description: Excel-ähnliche Kalkulatoren mit Echtzeit-Berechnung und Formelunterstützung
- * Version: 2.0.0
+ * Version: 2.2.0
  * Author: Samuel Baer
  * License: GPL v2 or later
  * Text Domain: excel-calculator-pro
@@ -170,15 +170,23 @@ class ExcelCalculatorPro
      */
     private function init_handlers()
     {
-        // Database-Handler zuerst initialisieren
+        // Database-Handler zuerst
         $this->database = new ECP_Database();
 
-        // Andere Handler initialisieren (nur wenn Database erfolgreich)
-        if ($this->database) {
+        // NEUE erweiterte Handler verwenden
+        if (class_exists('ECP_Admin_Enhanced')) {
+            $this->admin = new ECP_Admin_Enhanced();
+        } else {
             $this->admin = new ECP_Admin($this->database);
-            $this->frontend = new ECP_Frontend($this->database);
-            $this->shortcode = new ECP_Shortcode($this->database);
         }
+
+        if (class_exists('ECP_Frontend_Enhanced')) {
+            $this->frontend = new ECP_Frontend_Enhanced($this->database);
+        } else {
+            $this->frontend = new ECP_Frontend($this->database);
+        }
+
+        $this->shortcode = new ECP_Shortcode($this->database);
     }
 
     /**
