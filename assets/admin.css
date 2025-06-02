@@ -1,0 +1,722 @@
+/* Excel Calculator Pro - Admin Styles */
+
+/* ==========================================================================
+   Allgemeine Admin-Styles
+   ========================================================================== */
+
+.ecp-admin-header {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.ecp-admin-header h1 {
+    margin: 0;
+    font-size: 23px;
+    font-weight: 400;
+    color: #23282d;
+}
+
+/* ==========================================================================
+   Tab-Navigation
+   ========================================================================== */
+
+.nav-tab-wrapper {
+    margin: 20px 0;
+    border-bottom: 1px solid #c3c4c7;
+}
+
+.nav-tab {
+    background: #f1f1f1;
+    border: 1px solid #c3c4c7;
+    color: #50575e;
+    text-decoration: none;
+    display: inline-block;
+    padding: 8px 12px;
+    margin: 0 2px -1px 0;
+    font-size: 14px;
+    line-height: 1.71428571;
+    border-radius: 3px 3px 0 0;
+    transition: all 0.2s ease;
+}
+
+.nav-tab:hover {
+    background: #fff;
+    color: #0073aa;
+}
+
+.nav-tab-active {
+    background: #fff;
+    border-bottom-color: #fff;
+    color: #000;
+}
+
+.tab-content {
+    background: #fff;
+    padding: 20px;
+    border: 1px solid #c3c4c7;
+    border-top: none;
+    border-radius: 0 0 3px 3px;
+}
+
+/* ==========================================================================
+   Kalkulatoren-Grid
+   ========================================================================== */
+
+.ecp-calculators-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.ecp-calculator-card {
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.ecp-calculator-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.ecp-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #f0f0f1;
+}
+
+.ecp-card-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.ecp-card-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.ecp-card-actions .button-link {
+    background: none;
+    border: none;
+    padding: 5px;
+    cursor: pointer;
+    border-radius: 3px;
+    transition: background-color 0.2s ease;
+    font-size: 16px;
+    line-height: 1;
+}
+
+.ecp-card-actions .button-link:hover {
+    background: #f0f0f1;
+}
+
+.ecp-card-description {
+    color: #50575e;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.ecp-shortcode-display {
+    background: #f6f7f7;
+    border: 1px solid #dcdcde;
+    border-radius: 4px;
+    padding: 10px;
+    font-family: Consolas, Monaco, monospace;
+    font-size: 12px;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.ecp-shortcode-display code {
+    background: none;
+    padding: 0;
+    font-size: inherit;
+}
+
+.ecp-copy-shortcode {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    background: #0073aa;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 2px 6px;
+    font-size: 10px;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.ecp-shortcode-display:hover .ecp-copy-shortcode {
+    opacity: 1;
+}
+
+.ecp-card-meta {
+    color: #646970;
+    font-size: 12px;
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid #f0f0f1;
+}
+
+/* ==========================================================================
+   Empty State
+   ========================================================================== */
+
+.ecp-empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #646970;
+    background: #f9f9f9;
+    border: 2px dashed #c3c4c7;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.ecp-empty-state p {
+    font-size: 16px;
+    margin: 10px 0;
+}
+
+/* ==========================================================================
+   Kalkulator-Editor
+   ========================================================================== */
+
+#ecp-calculator-editor {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    border-radius: 8px;
+    padding: 25px;
+    margin: 20px 0;
+}
+
+.ecp-editor-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f1;
+}
+
+.ecp-editor-header h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.ecp-editor-content {
+    margin-bottom: 30px;
+}
+
+.ecp-editor-sections {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+.ecp-section {
+    background: #f9f9f9;
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    padding: 20px;
+}
+
+.ecp-section h3 {
+    margin: 0 0 20px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #e2e4e7;
+}
+
+.ecp-sortable {
+    min-height: 100px;
+}
+
+.ecp-field-row, .ecp-output-row {
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 15px;
+    position: relative;
+    cursor: move;
+    transition: all 0.2s ease;
+}
+
+.ecp-field-row:hover, .ecp-output-row:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.ecp-field-row .form-table, .ecp-output-row .form-table {
+    margin: 0;
+}
+
+.ecp-field-row .form-table th,
+.ecp-output-row .form-table th {
+    width: 120px;
+    padding: 8px 10px 8px 0;
+    vertical-align: top;
+    font-weight: 600;
+}
+
+.ecp-field-row .form-table td,
+.ecp-output-row .form-table td {
+    padding: 8px 0;
+}
+
+.remove-field, .remove-output {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 3px;
+    padding: 4px 8px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+}
+
+.remove-field:hover, .remove-output:hover {
+    background: #c82333;
+}
+
+.field-id {
+    background: #f0f0f1;
+    color: #646970;
+    border: 1px solid #dcdcde;
+}
+
+.ecp-editor-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 25px;
+    border-top: 2px solid #f0f0f1;
+}
+
+.ecp-editor-actions .button {
+    margin-right: 10px;
+}
+
+/* ==========================================================================
+   Vorlagen-Grid
+   ========================================================================== */
+
+.ecp-templates-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    margin: 20px 0;
+}
+
+.ecp-template-card {
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    transition: all 0.2s ease;
+    cursor: pointer;
+    position: relative;
+}
+
+.ecp-template-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.ecp-template-card h3 {
+    margin: 0 0 10px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.ecp-template-card p {
+    color: #50575e;
+    font-size: 14px;
+    line-height: 1.5;
+    margin-bottom: 15px;
+}
+
+.ecp-template-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ecp-template-category {
+    background: #f0f6fc;
+    color: #0969da;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* ==========================================================================
+   Import/Export
+   ========================================================================== */
+
+.ecp-ie-section {
+    background: #f9f9f9;
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.ecp-ie-section h3 {
+    margin: 0 0 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.ecp-ie-section p {
+    color: #50575e;
+    margin-bottom: 15px;
+}
+
+.ecp-ie-section select,
+.ecp-ie-section input[type="file"] {
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   Modal
+   ========================================================================== */
+
+.ecp-modal {
+    position: fixed;
+    z-index: 100000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(2px);
+}
+
+.ecp-modal-content {
+    background-color: #fff;
+    margin: 10% auto;
+    padding: 0;
+    border: 1px solid #e2e4e7;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+    animation: ecpModalSlideIn 0.3s ease;
+}
+
+@keyframes ecpModalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ecp-modal-header {
+    padding: 20px 25px;
+    border-bottom: 1px solid #e2e4e7;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.ecp-modal-header h3 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    color: #1d2327;
+}
+
+.ecp-modal-close {
+    color: #646970;
+    font-size: 24px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 1;
+    padding: 5px;
+    border-radius: 3px;
+    transition: all 0.2s ease;
+}
+
+.ecp-modal-close:hover {
+    color: #dc3545;
+    background: #f0f0f1;
+}
+
+.ecp-modal-body {
+    padding: 25px;
+}
+
+.ecp-modal-actions {
+    margin-top: 20px;
+    display: flex;
+    gap: 10px;
+}
+
+/* ==========================================================================
+   Vorschau-Bereich
+   ========================================================================== */
+
+#ecp-preview-content {
+    background: #f9f9f9;
+    border: 1px solid #e2e4e7;
+    border-radius: 6px;
+    padding: 20px;
+    min-height: 200px;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 1200px) {
+    .ecp-editor-sections {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+}
+
+@media (max-width: 782px) {
+    .ecp-calculators-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ecp-templates-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ecp-admin-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .ecp-card-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .ecp-editor-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+    
+    .ecp-modal-content {
+        width: 95%;
+        margin: 5% auto;
+    }
+}
+
+/* ==========================================================================
+   Accessibility
+   ========================================================================== */
+
+.ecp-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus-Styles für bessere Accessibility */
+.ecp-calculator-card:focus,
+.ecp-template-card:focus,
+.ecp-field-row:focus,
+.ecp-output-row:focus {
+    outline: 2px solid #0073aa;
+    outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Animationen
+   ========================================================================== */
+
+.ecp-fade-in {
+    animation: ecpFadeIn 0.3s ease;
+}
+
+@keyframes ecpFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.ecp-slide-up {
+    animation: ecpSlideUp 0.3s ease;
+}
+
+@keyframes ecpSlideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* ==========================================================================
+   Drag & Drop
+   ========================================================================== */
+
+.ui-sortable-helper {
+    transform: rotate(5deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.ui-sortable-placeholder {
+    background: #e3f2fd;
+    border: 2px dashed #1976d2;
+    visibility: visible !important;
+    height: 100px;
+    margin-bottom: 15px;
+    border-radius: 6px;
+}
+
+/* ==========================================================================
+   Tooltips
+   ========================================================================== */
+
+.ecp-tooltip {
+    position: relative;
+    display: inline-block;
+    cursor: help;
+}
+
+.ecp-tooltip .ecp-tooltiptext {
+    visibility: hidden;
+    width: 200px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -100px;
+    opacity: 0;
+    transition: opacity 0.3s;
+    font-size: 12px;
+    line-height: 1.4;
+}
+
+.ecp-tooltip .ecp-tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.ecp-tooltip:hover .ecp-tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+/* ==========================================================================
+   Status-Indikatoren
+   ========================================================================== */
+
+.ecp-status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 8px;
+}
+
+.ecp-status-active {
+    background-color: #28a745;
+}
+
+.ecp-status-inactive {
+    background-color: #dc3545;
+}
+
+.ecp-status-draft {
+    background-color: #ffc107;
+}
+
+/* ==========================================================================
+   Buttons
+   ========================================================================== */
+
+.ecp-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.ecp-btn-icon::before {
+    font-size: 14px;
+}
+
+.ecp-btn-success {
+    background: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.ecp-btn-success:hover {
+    background: #218838;
+    border-color: #1e7e34;
+    color: white;
+}
+
+.ecp-btn-danger {
+    background: #dc3545;
+    border-color: #dc3545;
+    color: white;
+}
+
+.ecp-btn-danger:hover {
+    background: #c82333;
+    border-color: #bd2130;
+    color: white;
+}

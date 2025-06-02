@@ -1,0 +1,762 @@
+/* Excel Calculator Pro - Frontend Styles */
+
+/* ==========================================================================
+   CSS Reset für Plugin-Isolation
+   ========================================================================== */
+
+.ecp-calculator * {
+    box-sizing: border-box;
+}
+
+/* ==========================================================================
+   Hauptcontainer
+   ========================================================================== */
+
+.ecp-calculator {
+    max-width: 700px;
+    margin: 30px auto;
+    padding: 30px;
+    border: 1px solid #e1e5e9;
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    line-height: 1.6;
+    color: #2c3e50;
+    position: relative;
+    overflow: hidden;
+}
+
+.ecp-calculator::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #007cba 0%, #00a0d2 50%, #007cba 100%);
+    background-size: 200% 100%;
+    animation: ecpGradientShift 3s ease-in-out infinite;
+}
+
+@keyframes ecpGradientShift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* ==========================================================================
+   Header-Bereich
+   ========================================================================== */
+
+.ecp-calculator-header {
+    margin-bottom: 30px;
+    text-align: center;
+    padding-bottom: 20px;
+    border-bottom: 2px solid #f8f9fa;
+    position: relative;
+}
+
+.ecp-calculator-title {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1a202c;
+    margin: 0 0 12px 0;
+    letter-spacing: -0.5px;
+    position: relative;
+}
+
+.ecp-calculator-description {
+    color: #6c757d;
+    font-size: 16px;
+    margin: 0;
+    font-weight: 400;
+    line-height: 1.5;
+}
+
+/* ==========================================================================
+   Sektionen
+   ========================================================================== */
+
+.ecp-section {
+    margin-bottom: 35px;
+    animation: ecpSlideInUp 0.6s ease-out;
+}
+
+.ecp-section:last-child {
+    margin-bottom: 0;
+}
+
+@keyframes ecpSlideInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.ecp-section-title {
+    font-size: 20px;
+    font-weight: 600;
+    color: #1a202c;
+    margin: 0 0 20px 0;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #e9ecef;
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.ecp-section-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: linear-gradient(135deg, #007cba, #00a0d2);
+    border-radius: 2px;
+}
+
+/* ==========================================================================
+   Eingabefelder
+   ========================================================================== */
+
+.ecp-field-group {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+    border: 1px solid #e9ecef;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ecp-field-group::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 4px;
+    height: 100%;
+    background: linear-gradient(135deg, #007cba, #00a0d2);
+    transform: scaleY(0);
+    transition: transform 0.3s ease;
+}
+
+.ecp-field-group:hover {
+    background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
+    border-color: #007cba;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 124, 186, 0.15);
+}
+
+.ecp-field-group:hover::before {
+    transform: scaleY(1);
+}
+
+.ecp-field-group label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 20px;
+    min-width: 200px;
+    text-align: left;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.ecp-required {
+    color: #dc3545;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.ecp-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+}
+
+.ecp-input-field {
+    padding: 14px 18px;
+    border: 2px solid #dee2e6;
+    border-radius: 8px;
+    width: 240px;
+    font-size: 16px;
+    font-weight: 500;
+    transition: all 0.3s ease;
+    background: white;
+    outline: none;
+    position: relative;
+    z-index: 1;
+}
+
+.ecp-input-field:focus {
+    border-color: #007cba;
+    box-shadow: 0 0 0 4px rgba(0, 124, 186, 0.1);
+    transform: scale(1.02);
+}
+
+.ecp-input-field:invalid {
+    border-color: #dc3545;
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
+}
+
+.ecp-input-field::placeholder {
+    color: #adb5bd;
+    font-style: italic;
+}
+
+.ecp-input-unit {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+.ecp-field-help {
+    font-size: 12px;
+    color: #6c757d;
+    margin-top: 6px;
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.ecp-error-message {
+    color: #dc3545;
+    font-size: 12px;
+    margin-top: 4px;
+    font-weight: 500;
+}
+
+/* ==========================================================================
+   Ausgabefelder
+   ========================================================================== */
+
+.ecp-output-group {
+    margin-bottom: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px;
+    background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
+    border: 1px solid #b3d9e6;
+    border-left: 5px solid #007cba;
+    border-radius: 10px;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.ecp-output-group::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(0, 124, 186, 0.05) 0%, rgba(0, 160, 210, 0.02) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.ecp-output-group:hover::before {
+    opacity: 1;
+}
+
+.ecp-output-group label {
+    font-weight: 600;
+    color: #2c3e50;
+    margin-right: 20px;
+    min-width: 200px;
+    text-align: left;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.ecp-output-help {
+    cursor: help;
+    font-size: 12px;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.ecp-output-help:hover {
+    opacity: 1;
+}
+
+.ecp-output-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    z-index: 2;
+}
+
+.ecp-output-field {
+    font-weight: 700;
+    font-size: 20px;
+    color: #007cba;
+    background: white;
+    padding: 14px 20px;
+    border-radius: 8px;
+    min-width: 140px;
+    text-align: right;
+    border: 2px solid #007cba;
+    transition: all 0.3s ease;
+    position: relative;
+    box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+}
+
+.ecp-output-field.ecp-animated {
+    transform: scale(1.05);
+    box-shadow: 0 6px 20px rgba(0, 124, 186, 0.25);
+    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+}
+
+.ecp-output-field.ecp-changed {
+    animation: ecpPulseGlow 0.6s ease-in-out;
+}
+
+@keyframes ecpPulseGlow {
+    0% { 
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+    }
+    50% { 
+        transform: scale(1.08);
+        box-shadow: 0 8px 25px rgba(0, 124, 186, 0.3);
+        background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%);
+    }
+    100% { 
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+    }
+}
+
+.ecp-output-unit {
+    color: #6c757d;
+    font-weight: 600;
+    font-size: 14px;
+    white-space: nowrap;
+}
+
+/* ==========================================================================
+   Verschiedene Themes
+   ========================================================================== */
+
+/* Kompaktes Theme */
+.ecp-theme-compact {
+    padding: 20px;
+    max-width: 500px;
+}
+
+.ecp-theme-compact .ecp-field-group,
+.ecp-theme-compact .ecp-output-group {
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.ecp-theme-compact .ecp-calculator-title {
+    font-size: 22px;
+}
+
+.ecp-theme-compact .ecp-section-title {
+    font-size: 16px;
+}
+
+.ecp-theme-compact .ecp-input-field {
+    width: 180px;
+    padding: 10px 14px;
+    font-size: 14px;
+}
+
+.ecp-theme-compact .ecp-output-field {
+    font-size: 16px;
+    padding: 10px 16px;
+    min-width: 100px;
+}
+
+/* Modernes Theme */
+.ecp-theme-modern {
+    border-radius: 20px;
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+}
+
+.ecp-theme-modern .ecp-field-group,
+.ecp-theme-modern .ecp-output-group {
+    border-radius: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.ecp-theme-modern .ecp-input-field,
+.ecp-theme-modern .ecp-output-field {
+    border-radius: 12px;
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .ecp-calculator {
+        margin: 15px;
+        padding: 25px 20px;
+        max-width: none;
+    }
+    
+    .ecp-field-group, 
+    .ecp-output-group {
+        flex-direction: column;
+        align-items: flex-start;
+        text-align: left;
+        padding: 18px;
+    }
+    
+    .ecp-field-group label, 
+    .ecp-output-group label {
+        margin-bottom: 12px;
+        margin-right: 0;
+        min-width: auto;
+        width: 100%;
+    }
+    
+    .ecp-input-wrapper,
+    .ecp-output-wrapper {
+        width: 100%;
+    }
+    
+    .ecp-input-field {
+        width: 100%;
+        max-width: none;
+    }
+    
+    .ecp-output-field {
+        width: 100%;
+        text-align: center;
+        min-width: auto;
+    }
+    
+    .ecp-calculator-title {
+        font-size: 24px;
+    }
+    
+    .ecp-section-title {
+        font-size: 18px;
+    }
+}
+
+@media (max-width: 480px) {
+    .ecp-calculator {
+        padding: 20px 15px;
+        margin: 10px;
+    }
+    
+    .ecp-calculator-title {
+        font-size: 20px;
+    }
+    
+    .ecp-section-title {
+        font-size: 16px;
+    }
+    
+    .ecp-field-group,
+    .ecp-output-group {
+        padding: 15px;
+    }
+    
+    .ecp-input-field {
+        font-size: 16px; /* Verhindert Zoom auf iOS */
+        padding: 12px 16px;
+    }
+    
+    .ecp-output-field {
+        font-size: 18px;
+        padding: 12px 16px;
+    }
+}
+
+/* ==========================================================================
+   Dark Mode Support
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .ecp-calculator {
+        background: #1a1a1a;
+        border-color: #404040;
+        color: #e0e0e0;
+    }
+    
+    .ecp-calculator::before {
+        background: linear-gradient(90deg, #0073aa 0%, #005a87 50%, #0073aa 100%);
+    }
+    
+    .ecp-calculator-title,
+    .ecp-section-title {
+        color: #ffffff;
+    }
+    
+    .ecp-section-title {
+        border-bottom-color: #404040;
+    }
+    
+    .ecp-field-group {
+        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
+        border-color: #404040;
+    }
+    
+    .ecp-field-group:hover {
+        background: linear-gradient(135deg, #353535 0%, #2d2d2d 100%);
+        border-color: #0073aa;
+    }
+    
+    .ecp-input-field {
+        background: #1a1a1a;
+        border-color: #404040;
+        color: #e0e0e0;
+    }
+    
+    .ecp-input-field:focus {
+        border-color: #0073aa;
+        background: #2d2d2d;
+    }
+    
+    .ecp-output-group {
+        background: linear-gradient(135deg, #1a3a4a 0%, #0f2f3f 100%);
+        border-color: #0073aa;
+    }
+    
+    .ecp-output-field {
+        background: #1a1a1a;
+        color: #00a0d2;
+        border-color: #0073aa;
+    }
+    
+    .ecp-field-help,
+    .ecp-output-help,
+    .ecp-input-unit,
+    .ecp-output-unit {
+        color: #adb5bd;
+    }
+}
+
+/* ==========================================================================
+   High Contrast Mode
+   ========================================================================== */
+
+@media (prefers-contrast: high) {
+    .ecp-calculator {
+        border: 3px solid #000;
+        background: #fff;
+        color: #000;
+    }
+    
+    .ecp-input-field,
+    .ecp-output-field {
+        border: 2px solid #000;
+        background: #fff;
+        color: #000;
+    }
+    
+    .ecp-input-field:focus {
+        outline: 3px solid #0066cc;
+        outline-offset: 2px;
+    }
+    
+    .ecp-field-group,
+    .ecp-output-group {
+        border: 2px solid #000;
+        background: #f5f5f5;
+    }
+}
+
+/* ==========================================================================
+   Print Styles
+   ========================================================================== */
+
+@media print {
+    .ecp-calculator {
+        box-shadow: none;
+        border: 2px solid #000;
+        break-inside: avoid;
+        background: white !important;
+        color: black !important;
+        max-width: none;
+        margin: 0;
+        padding: 20px;
+    }
+    
+    .ecp-calculator::before {
+        display: none;
+    }
+    
+    .ecp-field-group,
+    .ecp-output-group {
+        background: white !important;
+        border: 1px solid #000;
+        break-inside: avoid;
+        margin-bottom: 10px;
+    }
+    
+    .ecp-input-field,
+    .ecp-output-field {
+        border: 1px solid #000 !important;
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+    }
+    
+    .ecp-calculator-title,
+    .ecp-section-title {
+        color: black !important;
+    }
+    
+    /* Verstecke interaktive Elemente */
+    .ecp-input-field::placeholder {
+        display: none;
+    }
+}
+
+/* ==========================================================================
+   Accessibility Improvements
+   ========================================================================== */
+
+/* Focus-Styles für bessere Accessibility */
+.ecp-input-field:focus,
+.ecp-output-field:focus-within {
+    outline: 3px solid #0073aa;
+    outline-offset: 2px;
+}
+
+/* Screen Reader Only */
+.ecp-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+    .ecp-calculator,
+    .ecp-section,
+    .ecp-field-group,
+    .ecp-output-group,
+    .ecp-input-field,
+    .ecp-output-field {
+        animation: none;
+        transition: none;
+    }
+    
+    .ecp-calculator::before {
+        animation: none;
+    }
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.ecp-loading {
+    opacity: 0.6;
+    pointer-events: none;
+    position: relative;
+}
+
+.ecp-loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 32px;
+    height: 32px;
+    margin: -16px 0 0 -16px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #007cba;
+    border-radius: 50%;
+    animation: ecpSpin 1s linear infinite;
+    z-index: 1000;
+}
+
+@keyframes ecpSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* ==========================================================================
+   Error States
+   ========================================================================== */
+
+.ecp-calculator.ecp-error {
+    border-color: #dc3545;
+}
+
+.ecp-calculator.ecp-error .ecp-output-field {
+    background: #f8d7da;
+    color: #721c24;
+    border-color: #dc3545;
+}
+
+/* ==========================================================================
+   Success States
+   ========================================================================== */
+
+.ecp-calculator.ecp-success .ecp-output-field {
+    background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+    color: #155724;
+    border-color: #28a745;
+}
+
+/* ==========================================================================
+   Debug Mode (nur für Entwickler)
+   ========================================================================== */
+
+.ecp-debug .ecp-formula-debug {
+    font-size: 10px;
+    color: #6c757d;
+    font-family: 'Courier New', monospace;
+    margin-top: 4px;
+    padding: 4px 8px;
+    background: #f8f9fa;
+    border-radius: 3px;
+    border-left: 3px solid #007cba;
+}
+
+/* ==========================================================================
+   Custom Scrollbar (für Container mit Overflow)
+   ========================================================================== */
+
+.ecp-calculator::-webkit-scrollbar {
+    width: 8px;
+}
+
+.ecp-calculator::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.ecp-calculator::-webkit-scrollbar-thumb {
+    background: #007cba;
+    border-radius: 4px;
+}
+
+.ecp-calculator::-webkit-scrollbar-thumb:hover {
+    background: #005a87;
+}
