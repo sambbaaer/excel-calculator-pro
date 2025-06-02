@@ -181,8 +181,102 @@
 .ecp-input-wrapper {
     display: flex;
     align-items: center;
+    /* Stellt sicher, dass Hilfetext, Input und Einheit auf einer Linie sind */
     gap: 8px;
+    /* Behält den Abstand zwischen Elementen im Wrapper bei */
+    flex-grow: 1;
+    /* Erlaubt dem Wrapper, den verfügbaren Platz einzunehmen */
+}
+
+.ecp-field-help-prefix {
+    font-size: 0.85em;
+    /* Etwas kleiner als der Label-Text */
+    color: var(--ecp-text-light, #6c757d);
+    margin-right: 8px;
+    /* Abstand zum Eingabefeld */
+    font-style: italic;
+    white-space: nowrap;
+    /* Verhindert Umbruch, falls der Text kurz ist */
+    /* flex-shrink: 0; /* Verhindert, dass der Hilfetext schrumpft, falls nicht genug Platz ist */
+}
+
+/* Anpassung für das Label, um mehr Platz für den Input-Wrapper zu lassen, falls nötig */
+.ecp-field-group label {
+    /* min-width: 150px; /* Ggf. anpassen oder flex-shrink: 0; setzen */
+    /* flex-grow: 0; */
+    /* Verhindert, dass das Label unnötig viel Platz einnimmt */
+}
+
+
+/* Kopier-Icon für Ausgabefelder */
+.ecp-output-wrapper {
     position: relative;
+    /* Für absolute Positionierung, falls erwünscht, oder einfach flex lassen */
+    display: flex;
+    /* Stellt sicher, dass Output-Feld und Icon nebeneinander liegen */
+    align-items: center;
+}
+
+.ecp-copy-icon {
+    cursor: pointer;
+    margin-left: 10px;
+    /* Abstand zum Output-Feld/Einheit */
+    font-size: 1em;
+    /* Passende Grösse zum Text */
+    color: var(--ecp-primary-color, #007cba);
+    opacity: 0;
+    /* Standardmässig unsichtbar */
+    visibility: hidden;
+    /* Standardmässig nicht interaktiv */
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out, color 0.2s ease-in-out;
+    user-select: none;
+    /* Verhindert Textauswahl des Icons */
+}
+
+.ecp-output-group:hover .ecp-copy-icon {
+    /* Icon beim Hover über die gesamte Gruppe anzeigen */
+    opacity: 0.7;
+    visibility: visible;
+}
+
+.ecp-copy-icon:hover {
+    opacity: 1;
+    transform: scale(1.15);
+    /* Leichte Vergrösserung beim Hover über das Icon selbst */
+}
+
+.ecp-copy-icon.ecp-copied-feedback {
+    /* Klasse für visuelles Feedback nach dem Kopieren */
+    color: #28a745;
+    /* Erfolgsfarbe (Grün) */
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.ecp-copy-icon.ecp-copied-feedback:hover {
+    transform: scale(1.1);
+    /* Behält den Scale-Effekt während des Feedbacks bei */
+}
+
+/* Anpassung für Responsivität des Hilfetextes und Kopier-Icons falls nötig */
+@media (max-width: 768px) {
+    .ecp-field-help-prefix {
+        /* Ggf. white-space: normal; und margin-bottom: 5px; wenn es unter das Label soll */
+        /* oder display: block; margin-right: 0; margin-bottom: 5px; */
+    }
+
+    .ecp-output-group:hover .ecp-copy-icon,
+    .ecp-output-wrapper:hover .ecp-copy-icon {
+        /* Auf Touch-Geräten ist Hover schwierig, ggf. immer sichtbar machen oder andere Logik */
+        opacity: 0.7;
+        /* Leicht sichtbar machen, wenn man nicht hovern kann, oder ganz */
+        visibility: visible;
+    }
+}
+
+/* Entferne den Stern für Pflichtfelder, falls er noch irgendwo im CSS gestyled wurde */
+.ecp-required {
+    display: none !important;
 }
 
 .ecp-input-field {
