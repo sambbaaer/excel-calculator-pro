@@ -293,10 +293,8 @@ class ECP_Security_Manager
             }
         }
 
-        // Boolean-Felder
-        if (isset($field['required'])) {
-            $sanitized['required'] = (bool) $field['required'];
-        }
+        // Boolean-Felder - FIX für den Required-Bug
+        $sanitized['required'] = isset($field['required']) ? filter_var($field['required'], FILTER_VALIDATE_BOOLEAN) : false;
 
         return $sanitized;
     }
@@ -401,8 +399,10 @@ class ECP_Security_Manager
             'TAG',
             'CEILING',
             'OBERGRENZE',
+            'AUFRUNDEN',
             'FLOOR',
             'UNTERGRENZE',
+            'ABRUNDEN',
             'RAND',
             'ZUFALLSZAHL'
         );
