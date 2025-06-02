@@ -509,7 +509,7 @@ class ECP_Database
     }
 
     /**
-     * Kalkulator aus Vorlage erstellen
+     * Kalkulator aus Vorlage erstellen - VERBESSERT
      */
     public function create_from_template($template_id, $name)
     {
@@ -524,13 +524,45 @@ class ECP_Database
             return false;
         }
 
+        // JSON-Felder korrekt dekodieren
+        $fields = json_decode($template->fields, true);
+        $formulas = json_decode($template->formulas, true);
+        $settings = json_decode($template->settings, true);
+
+        // Fallback für leere Arrays
+        if (!is_array($fields)) $fields = array();
+        if (!is_array($formulas)) $formulas = array();
+        if (!is_array($settings)) $settings = array();
+
         return $this->save_calculator(array(
             'name' => sanitize_text_field($name),
-            'description' => $template->description,
-            'fields' => $template->fields,
-            'formulas' => $template->formulas,
-            'settings' => $template->settings
+            'description' => $template->description ?: '',
+            'fields' => $fields,
+            'formulas' => $formulas,
+            'settings' => $settings
         ));
+    }
+
+    /**
+     * Vorlage abrufen - VERBESSERT
+     */
+    public function get_template($id)
+    {
+        global $wpdb;
+
+        $template = $wpdb->get_row($wpdb->prepare(
+            "SELECT * FROM {$this->table_templates} WHERE id = %d",
+            intval($id)
+        ));
+
+        if ($template) {
+            // JSON-Felder dekodieren
+            $template->fields = json_decode($template->fields, true) ?: array();
+            $template->formulas = json_decode($template->formulas, true) ?: array();
+            $template->settings = json_decode($template->settings, true) ?: array();
+        }
+
+        return $template;
     }
 
     /**

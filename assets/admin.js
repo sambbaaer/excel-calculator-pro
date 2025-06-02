@@ -443,7 +443,7 @@
     function addField(data = {}) {
         fieldCounter++;
         const fieldId = data.id || 'field_' + fieldCounter;
-        
+
         const fieldHtml = `
             <div class="ecp-field-row" data-field-id="${fieldId}">
                 <button type="button" class="remove-field" title="Feld entfernen">×</button>
@@ -488,15 +488,15 @@
                     </tr>
                     <tr>
                         <th>Erforderlich:</th>
-                        <td><input type="checkbox" class="field-required" ${data.required ? 'checked' : ''} /></td>
+                        <td><input type="checkbox" class="field-required" ${(data.required === true || data.required === 'true' || data.required === '1') ? 'checked' : ''} /></td>
                     </tr>
                 </table>
             </div>
         `;
-        
+
         $('#ecp-fields-container').append(fieldHtml);
         showUnsavedChanges();
-        
+
         // Animation
         $('#ecp-fields-container .ecp-field-row:last-child').hide().slideDown(300);
     }
@@ -665,14 +665,136 @@
     }
     
     /**
-     * Vorlage verwenden
-     */
+ * Vorlage verwenden - VERBESSERT
+ */
     function useTemplate() {
         selectedTemplateId = $(this).data('template-id');
         const templateName = $(this).closest('.ecp-template-card').find('h3').text();
-        
+
         $('#template-calculator-name').val(templateName);
         $('#ecp-template-modal').show();
+    }
+
+    /**
+     * Aus Vorlage erstellen - VERBESSERT
+     */
+    function createFromTemplate() {
+        const name = $('#template-calculator-name').val().trim();
+
+        if (!name) {
+            showError('Bitte geben Sie einen Namen ein.');
+            return;
+        }
+
+        showLoading();
+
+        $.ajax({
+            url: ecp_admin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'ecp_create_from_template',
+                nonce: ecp_admin.nonce,
+                template_id: selectedTemplateId,
+                name: name
+            },
+            success: function (response) {
+                hideLoading();
+
+                if (response.success) {
+                    closeModal();
+
+                    // Neuen Kalkulator sofort zur Bearbeitung laden
+                    if (response.data && response.data.id) {
+                        editCalculatorById(response.data.id);
+                    } else {
+                        showSuccess(ecp_admin.strings.template_created);
+                        setTimeout(() => location.reload(), 1000);
+                    }
+                } else {
+                    showError(response.data);
+                }
+            },
+            error: function () {
+                hideLoading();
+                showError(ecp_admin.strings.error_occurred);
+            }
+        });
+    }
+
+    /**
+     * Kalkulator nach ID bearbeiten - NEU
+     */
+    function editCalculatorById(calculatorId) {
+        showLoading();
+
+        $.ajax({
+            url: ecp_admin.ajax_url,
+            type: 'POST',
+            data: {
+                action: 'ecp_get_calculator',
+                nonce: ecp_admin.nonce,
+                calculator_id: calculatorId
+            },
+            success: function (response) {
+                hideLoading();
+
+                if (response.success) {
+                    populateEditor(response.data);
+                    $('#ecp-calculator-editor').show().addClass('ecp-slide-up');
+                    $('#ecp-calculators-list').hide();
+                    showSuccess('Kalkulator aus Vorlage erstellt und geöffnet!');
+                } else {
+                    showError(response.data);
+                    setTimeout(() => location.reload(), 1000);
+                }
+            },
+            error: function () {
+                hideLoading();
+                showError(ecp_admin.strings.error_occurred);
+                setTimeout(() => location.reload(), 1000);
+            }
+        });
+    }
+
+    /**
+     * Editor mit Daten füllen - VERBESSERT
+     */
+    function populateEditor(data) {
+        currentCalculatorId = data.id;
+        $('#calculator-id').val(data.id);
+        $('#calculator-name').val(data.name);
+        $('#calculator-description').val(data.description || '');
+        $('#ecp-editor-title').text('Kalkulator bearbeiten: ' + data.name);
+        $('#ecp-delete-calculator').show();
+        $('#ecp-duplicate-calculator').show();
+
+        // Container leeren
+        $('#ecp-fields-container').empty();
+        $('#ecp-outputs-container').empty();
+        fieldCounter = 0;
+        outputCounter = 0;
+
+        // Felder hinzufügen - VERBESSERT mit Array-Prüfung
+        if (Array.isArray(data.fields) && data.fields.length > 0) {
+            data.fields.forEach(function (field) {
+                // Sicherstellen, dass es ein Objekt ist
+                if (typeof field === 'object' && field !== null) {
+                    addField(field);
+                }
+            });
+        }
+
+        // Ausgabefelder hinzufügen - VERBESSERT mit Array-Prüfung
+        if (Array.isArray(data.formulas) && data.formulas.length > 0) {
+            data.formulas.forEach(function (formula) {
+                // Sicherstellen, dass es ein Objekt ist
+                if (typeof formula === 'object' && formula !== null) {
+                    addOutput(formula);
+                }
+            });
+        }
+
+        clearUnsavedChanges();
     }
     
     /**

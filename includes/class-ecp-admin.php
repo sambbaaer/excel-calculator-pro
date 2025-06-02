@@ -605,4 +605,147 @@ class ECP_Admin {
         }
         echo '</select>';
     }
+
+    /**
+     * Erweiterte Admin-Initialisierung - zu admin_init() hinzufügen
+     */
+    public function admin_init()
+    {
+        // Bestehende Einstellungen registrieren
+        register_setting('ecp_settings', 'ecp_general_settings');
+        register_setting('ecp_settings', 'ecp_color_settings'); // NEU
+
+        // Allgemeine Einstellungssektion
+        add_settings_section(
+            'ecp_general_section',
+            __('Allgemeine Einstellungen', 'excel-calculator-pro'),
+            array($this, 'general_section_callback'),
+            'ecp_settings'
+        );
+
+        // Farb-Einstellungssektion - NEU
+        add_settings_section(
+            'ecp_color_section',
+            __('Farb- und Design-Einstellungen', 'excel-calculator-pro'),
+            array($this, 'color_section_callback'),
+            'ecp_settings'
+        );
+
+        // Bestehende Felder
+        add_settings_field(
+            'default_currency',
+            __('Standard-Währung', 'excel-calculator-pro'),
+            array($this, 'currency_field_callback'),
+            'ecp_settings',
+            'ecp_general_section'
+        );
+
+        add_settings_field(
+            'number_format',
+            __('Zahlenformat', 'excel-calculator-pro'),
+            array($this, 'number_format_field_callback'),
+            'ecp_settings',
+            'ecp_general_section'
+        );
+
+        // NEU: Farbfelder
+        add_settings_field(
+            'primary_color',
+            __('Primärfarbe', 'excel-calculator-pro'),
+            array($this, 'primary_color_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+
+        add_settings_field(
+            'secondary_color',
+            __('Sekundärfarbe', 'excel-calculator-pro'),
+            array($this, 'secondary_color_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+
+        add_settings_field(
+            'background_color',
+            __('Hintergrundfarbe', 'excel-calculator-pro'),
+            array($this, 'background_color_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+
+        add_settings_field(
+            'calculator_width',
+            __('Standard-Breite', 'excel-calculator-pro'),
+            array($this, 'calculator_width_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+    }
+
+    /**
+     * Farb-Sektion Callback - NEU
+     */
+    public function color_section_callback()
+    {
+        echo '<p>' . __('Passen Sie das Aussehen Ihrer Kalkulatoren an.', 'excel-calculator-pro') . '</p>';
+    }
+
+    /**
+     * Primärfarbe Callback - NEU
+     */
+    public function primary_color_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['primary_color']) ? $options['primary_color'] : '#007cba';
+
+        echo '<input type="color" name="ecp_color_settings[primary_color]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hauptfarbe für Buttons, Rahmen und Akzente', 'excel-calculator-pro') . '</p>';
+    }
+
+    /**
+     * Sekundärfarbe Callback - NEU
+     */
+    public function secondary_color_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['secondary_color']) ? $options['secondary_color'] : '#00a0d2';
+
+        echo '<input type="color" name="ecp_color_settings[secondary_color]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Sekundäre Akzentfarbe für Verläufe und Hover-Effekte', 'excel-calculator-pro') . '</p>';
+    }
+
+    /**
+     * Hintergrundfarbe Callback - NEU
+     */
+    public function background_color_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['background_color']) ? $options['background_color'] : '#ffffff';
+
+        echo '<input type="color" name="ecp_color_settings[background_color]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Kalkulatoren', 'excel-calculator-pro') . '</p>';
+    }
+
+    /**
+     * Kalkulator-Breite Callback - NEU
+     */
+    public function calculator_width_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $width = isset($options['calculator_width']) ? $options['calculator_width'] : 'full';
+
+        echo '<select name="ecp_color_settings[calculator_width]">';
+        $widths = array(
+            'full' => __('Volle Breite (100%)', 'excel-calculator-pro'),
+            'contained' => __('Begrenzt (700px)', 'excel-calculator-pro'),
+            'large' => __('Gross (900px)', 'excel-calculator-pro'),
+            'medium' => __('Mittel (600px)', 'excel-calculator-pro')
+        );
+
+        foreach ($widths as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '"' . selected($width, $value, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select>';
+        echo '<p class="description">' . __('Standard-Breite für neue Kalkulatoren', 'excel-calculator-pro') . '</p>';
+    }
 }

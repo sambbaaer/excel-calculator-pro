@@ -85,269 +85,373 @@ class ECP_Frontend
     }
     
     /**
-     * Inline-Styles hinzufügen
-     */
-    public function add_inline_styles() {
-        ?>
-        <style id="ecp-inline-styles">
-        /* Excel Calculator Pro Frontend Styles */
+ * Inline-Styles mit benutzerdefinierten Farben hinzufügen
+ */
+public function add_inline_styles() {
+    // Farbeinstellungen abrufen
+    $color_settings = get_option('ecp_color_settings', array());
+    $primary_color = isset($color_settings['primary_color']) ? $color_settings['primary_color'] : '#007cba';
+    $secondary_color = isset($color_settings['secondary_color']) ? $color_settings['secondary_color'] : '#00a0d2';
+    $background_color = isset($color_settings['background_color']) ? $color_settings['background_color'] : '#ffffff';
+    $calculator_width = isset($color_settings['calculator_width']) ? $color_settings['calculator_width'] : 'full';
+    
+    // Breiten-CSS basierend auf Einstellung
+    $width_css = '';
+    switch ($calculator_width) {
+        case 'contained':
+            $width_css = 'max-width: 700px; margin: 30px auto;';
+            break;
+        case 'large':
+            $width_css = 'max-width: 900px; margin: 30px auto;';
+            break;
+        case 'medium':
+            $width_css = 'max-width: 600px; margin: 30px auto;';
+            break;
+        default: // full
+            $width_css = 'max-width: 100%; width: 100%; margin: 30px 0;';
+            break;
+    }
+    
+    ?>
+    <style id="ecp-inline-styles">
+    /* Excel Calculator Pro Frontend Styles - Dynamische Farben */
+    :root {
+        --ecp-primary-color: <?php echo esc_attr($primary_color); ?>;
+        --ecp-secondary-color: <?php echo esc_attr($secondary_color); ?>;
+        --ecp-background-color: <?php echo esc_attr($background_color); ?>;
+    }
+    
+    .ecp-calculator {
+        <?php echo $width_css; ?>
+        padding: 30px;
+        border: 1px solid #e1e5e9;
+        border-radius: 12px;
+        background: var(--ecp-background-color);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        line-height: 1.6;
+        color: #2c3e50;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ecp-calculator::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--ecp-primary-color) 0%, var(--ecp-secondary-color) 50%, var(--ecp-primary-color) 100%);
+        background-size: 200% 100%;
+        animation: ecpGradientShift 3s ease-in-out infinite;
+    }
+    
+    @keyframes ecpGradientShift {
+        0%, 100% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+    }
+    
+    .ecp-calculator-header {
+        margin-bottom: 25px;
+        text-align: center;
+        border-bottom: 2px solid #f8f9fa;
+        padding-bottom: 15px;
+    }
+    
+    .ecp-calculator-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0 0 8px 0;
+    }
+    
+    .ecp-calculator-description {
+        color: #6c757d;
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    .ecp-section {
+        margin-bottom: 30px;
+    }
+    
+    .ecp-section-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin: 0 0 15px 0;
+        padding-bottom: 8px;
+        border-bottom: 1px solid #e9ecef;
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    .ecp-section-title::before {
+        content: '';
+        width: 4px;
+        height: 20px;
+        background: linear-gradient(135deg, var(--ecp-primary-color), var(--ecp-secondary-color));
+        border-radius: 2px;
+    }
+    
+    .ecp-field-group, .ecp-output-group {
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 6px;
+        transition: all 0.2s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .ecp-field-group::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 4px;
+        height: 100%;
+        background: linear-gradient(135deg, var(--ecp-primary-color), var(--ecp-secondary-color));
+        transform: scaleY(0);
+        transition: transform 0.3s ease;
+    }
+    
+    .ecp-field-group:hover {
+        background: #e9ecef;
+        border-color: var(--ecp-primary-color);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 124, 186, 0.15);
+    }
+    
+    .ecp-field-group:hover::before {
+        transform: scaleY(1);
+    }
+    
+    .ecp-field-group label, .ecp-output-group label {
+        font-weight: 600;
+        color: #495057;
+        margin-right: 15px;
+        min-width: 180px;
+        text-align: left;
+        font-size: 14px;
+    }
+    
+    .ecp-input-field {
+        padding: 12px 16px;
+        border: 2px solid #dee2e6;
+        border-radius: 6px;
+        width: 220px;
+        font-size: 16px;
+        font-weight: 500;
+        transition: all 0.2s ease;
+        background: white;
+        outline: none;
+    }
+    
+    .ecp-input-field:focus {
+        border-color: var(--ecp-primary-color);
+        box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
+        transform: scale(1.02);
+    }
+    
+    .ecp-input-field:invalid {
+        border-color: #dc3545;
+    }
+    
+    .ecp-output-group {
+        background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
+        border: 1px solid #b3d9e6;
+        border-left: 5px solid var(--ecp-primary-color);
+    }
+    
+    .ecp-output-field {
+        font-weight: 700;
+        font-size: 18px;
+        color: var(--ecp-primary-color);
+        background: white;
+        padding: 12px 16px;
+        border-radius: 6px;
+        min-width: 120px;
+        text-align: right;
+        border: 2px solid var(--ecp-primary-color);
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+    }
+    
+    .ecp-output-field.ecp-animated {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(0, 124, 186, 0.25);
+        background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+    }
+    
+    .ecp-output-field.ecp-changed {
+        animation: ecpPulseGlow 0.6s ease-in-out;
+    }
+    
+    @keyframes ecpPulseGlow {
+        0% { 
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+        }
+        50% { 
+            transform: scale(1.08);
+            box-shadow: 0 8px 25px rgba(0, 124, 186, 0.3);
+            background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%);
+        }
+        100% { 
+            transform: scale(1);
+            box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+        }
+    }
+    
+    .ecp-field-help, .ecp-input-unit, .ecp-output-unit {
+        font-size: 12px;
+        color: #6c757d;
+        margin-top: 4px;
+        font-style: italic;
+    }
+    
+    .ecp-error-message {
+        color: #dc3545;
+        font-size: 12px;
+        margin-top: 4px;
+    }
+    
+    .ecp-loading {
+        opacity: 0.6;
+        pointer-events: none;
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
         .ecp-calculator {
-            max-width: 700px;
-            margin: 20px auto;
-            padding: 25px;
-            border: 1px solid #e1e5e9;
-            border-radius: 8px;
-            background: #ffffff;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            margin: 20px 15px !important;
         }
-        
-        .ecp-calculator-header {
-            margin-bottom: 25px;
-            text-align: center;
-            border-bottom: 2px solid #f8f9fa;
-            padding-bottom: 15px;
-        }
-        
-        .ecp-calculator-title {
-            font-size: 24px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin: 0 0 8px 0;
-        }
-        
-        .ecp-calculator-description {
-            color: #6c757d;
-            font-size: 14px;
-            margin: 0;
-        }
-        
-        .ecp-section {
-            margin-bottom: 30px;
-        }
-        
-        .ecp-section-title {
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            margin: 0 0 15px 0;
-            padding-bottom: 8px;
-            border-bottom: 1px solid #e9ecef;
+    }
+    
+    @media (max-width: 768px) {
+        .ecp-calculator {
+            margin: 15px !important;
+            padding: 25px 20px;
         }
         
         .ecp-field-group, .ecp-output-group {
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            transition: all 0.2s ease;
-        }
-        
-        .ecp-field-group:hover {
-            background: #e9ecef;
+            flex-direction: column;
+            align-items: flex-start;
+            text-align: left;
         }
         
         .ecp-field-group label, .ecp-output-group label {
-            font-weight: 600;
-            color: #495057;
-            margin-right: 15px;
-            min-width: 180px;
-            text-align: left;
-            font-size: 14px;
+            margin-bottom: 8px;
+            min-width: auto;
+            width: 100%;
         }
         
         .ecp-input-field {
-            padding: 12px 16px;
-            border: 2px solid #dee2e6;
-            border-radius: 6px;
-            width: 220px;
-            font-size: 16px;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            background: white;
-        }
-        
-        .ecp-input-field:focus {
-            border-color: #007cba;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1);
-        }
-        
-        .ecp-input-field:invalid {
-            border-color: #dc3545;
+            width: 100%;
+            max-width: none;
         }
         
         .ecp-output-field {
-            font-weight: 700;
-            font-size: 18px;
-            color: #007cba;
-            background: white;
-            padding: 12px 16px;
-            border-radius: 6px;
-            min-width: 120px;
-            text-align: right;
-            border: 2px solid #007cba;
-            transition: all 0.3s ease;
+            width: 100%;
+            text-align: center;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .ecp-calculator {
+            margin: 10px !important;
+            padding: 20px 15px;
         }
         
-        .ecp-output-field.ecp-animated {
-            transform: scale(1.05);
-            box-shadow: 0 4px 12px rgba(0, 124, 186, 0.3);
+        .ecp-calculator-title {
+            font-size: 20px;
         }
         
-        .ecp-input-fields {
-            margin-bottom: 30px;
+        .ecp-section-title {
+            font-size: 16px;
+        }
+    }
+    
+    /* Dark Mode Support */
+    @media (prefers-color-scheme: dark) {
+        .ecp-calculator {
+            background: #1e1e1e !important;
+            border-color: #404040;
+            color: #e0e0e0;
         }
         
-        .ecp-output-fields {
-            margin-top: 25px;
+        .ecp-calculator-title, .ecp-section-title {
+            color: #ffffff;
+        }
+        
+        .ecp-section-title {
+            border-bottom-color: #404040;
+        }
+        
+        .ecp-field-group, .ecp-output-group {
+            background: #2d2d2d;
+        }
+        
+        .ecp-field-group:hover {
+            background: #353535;
+        }
+        
+        .ecp-input-field {
+            background: #1e1e1e;
+            border-color: #404040;
+            color: #e0e0e0;
+        }
+        
+        .ecp-input-field:focus {
+            background: #2d2d2d;
         }
         
         .ecp-output-group {
-            background: #e8f4f8;
-            border-left: 4px solid #007cba;
+            background: #1a3a4a;
         }
         
-        .ecp-field-help {
-            font-size: 12px;
-            color: #6c757d;
-            margin-top: 4px;
-            font-style: italic;
+        .ecp-output-field {
+            background: #1e1e1e;
+            color: var(--ecp-secondary-color);
         }
-        
-        .ecp-error-message {
-            color: #dc3545;
-            font-size: 12px;
-            margin-top: 4px;
-        }
-        
-        .ecp-loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
-        
-        .ecp-formula-debug {
-            font-size: 11px;
-            color: #6c757d;
-            font-family: monospace;
-            margin-top: 2px;
-        }
-        
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .ecp-calculator {
-                margin: 10px;
-                padding: 20px;
-            }
-            
-            .ecp-field-group, .ecp-output-group {
-                flex-direction: column;
-                align-items: flex-start;
-                text-align: left;
-            }
-            
-            .ecp-field-group label, .ecp-output-group label {
-                margin-bottom: 8px;
-                min-width: auto;
-                width: 100%;
-            }
-            
-            .ecp-input-field {
-                width: 100%;
-                max-width: none;
-            }
-            
-            .ecp-output-field {
-                width: 100%;
-                text-align: center;
-            }
-        }
-        
-        @media (max-width: 480px) {
-            .ecp-calculator {
-                padding: 15px;
-            }
-            
-            .ecp-calculator-title {
-                font-size: 20px;
-            }
-            
-            .ecp-section-title {
-                font-size: 16px;
-            }
-        }
-        
-        /* Dark Mode Support */
-        @media (prefers-color-scheme: dark) {
-            .ecp-calculator {
-                background: #1e1e1e;
-                border-color: #404040;
-                color: #e0e0e0;
-            }
-            
-            .ecp-calculator-title {
-                color: #ffffff;
-            }
-            
-            .ecp-section-title {
-                color: #ffffff;
-                border-bottom-color: #404040;
-            }
-            
-            .ecp-field-group, .ecp-output-group {
-                background: #2d2d2d;
-            }
-            
-            .ecp-field-group:hover {
-                background: #353535;
-            }
-            
-            .ecp-input-field {
-                background: #1e1e1e;
-                border-color: #404040;
-                color: #e0e0e0;
-            }
-            
-            .ecp-output-group {
-                background: #1a3a4a;
-            }
-        }
-        
-        /* Animationen */
-        @keyframes ecpPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.02); }
-            100% { transform: scale(1); }
-        }
-        
-        .ecp-output-field.ecp-changed {
-            animation: ecpPulse 0.3s ease-in-out;
-        }
-        
-        /* Print Styles */
-        @media print {
-            .ecp-calculator {
-                box-shadow: none;
-                border: 1px solid #000;
-                break-inside: avoid;
-            }
-            
-            .ecp-input-field {
-                border: 1px solid #000;
-                background: white !important;
-            }
-            
-            .ecp-output-field {
-                border: 2px solid #000;
-                background: #f0f0f0 !important;
-            }
-        }
-        </style>
-        <?php
     }
+    
+    /* Print Styles */
+    @media print {
+        .ecp-calculator {
+            box-shadow: none !important;
+            border: 1px solid #000 !important;
+            background: white !important;
+            color: black !important;
+            max-width: none !important;
+            margin: 0 !important;
+            padding: 20px !important;
+        }
+        
+        .ecp-calculator::before {
+            display: none !important;
+        }
+        
+        .ecp-field-group, .ecp-output-group {
+            background: white !important;
+            border: 1px solid #000 !important;
+        }
+        
+        .ecp-input-field, .ecp-output-field {
+            border: 1px solid #000 !important;
+            background: white !important;
+            color: black !important;
+            box-shadow: none !important;
+        }
+    }
+    </style>
     
     /**
      * Inline-Scripts hinzufügen
