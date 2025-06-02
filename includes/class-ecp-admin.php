@@ -19,10 +19,11 @@ class ECP_Admin
 
     /**
      * Konstruktor
+     * Nimmt jetzt die Datenbankinstanz als Parameter entgegen.
      */
-    public function __construct()
-    {
-        $this->database = ecp_init()->get_database();
+    public function __construct($db_instance)
+    { // MODIFIZIERT: Parameter hinzugefügt
+        $this->database = $db_instance;         // MODIFIZIERT: Zugewiesen
         $this->init_hooks();
     }
 
@@ -39,6 +40,7 @@ class ECP_Admin
         add_action('wp_ajax_ecp_save_calculator', array($this, 'ajax_save_calculator'));
         add_action('wp_ajax_ecp_delete_calculator', array($this, 'ajax_delete_calculator'));
         add_action('wp_ajax_ecp_get_calculator', array($this, 'ajax_get_calculator'));
+        add_action('wp_ajax_ecp_create_from_template', array($this, 'ajax_create_from_template'));
         add_action('wp_ajax_ecp_export_calculator', array($this, 'ajax_export_calculator'));
         add_action('wp_ajax_ecp_import_calculator', array($this, 'ajax_import_calculator'));
     }
@@ -91,7 +93,8 @@ class ECP_Admin
                 'success_saved' => __('Kalkulator gespeichert!', 'excel-calculator-pro'),
                 'success_deleted' => __('Kalkulator gelöscht!', 'excel-calculator-pro'),
                 'error_occurred' => __('Ein Fehler ist aufgetreten:', 'excel-calculator-pro'),
-                'loading' => __('Lädt...', 'excel-calculator-pro')
+                'loading' => __('Lädt...', 'excel-calculator-pro'),
+                'template_created' => __('Kalkulator aus Vorlage erstellt!', 'excel-calculator-pro')
             )
         ));
     }
@@ -103,7 +106,7 @@ class ECP_Admin
     {
         // Einstellungen registrieren
         register_setting('ecp_settings', 'ecp_general_settings');
-        register_setting('ecp_settings', 'ecp_color_settings'); // NEU
+        register_setting('ecp_settings', 'ecp_color_settings');
 
         // Allgemeine Einstellungssektion
         add_settings_section(
@@ -113,7 +116,7 @@ class ECP_Admin
             'ecp_settings'
         );
 
-        // Farb-Einstellungssektion - NEU
+        // Farb-Einstellungssektion
         add_settings_section(
             'ecp_color_section',
             __('Farb- und Design-Einstellungen', 'excel-calculator-pro'),
@@ -138,7 +141,6 @@ class ECP_Admin
             'ecp_general_section'
         );
 
-        // NEU: Farbfelder
         add_settings_field(
             'primary_color',
             __('Primärfarbe', 'excel-calculator-pro'),
@@ -187,6 +189,10 @@ class ECP_Admin
                     class="nav-tab <?php echo $current_tab === 'calculators' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Kalkulatoren', 'excel-calculator-pro'); ?>
                 </a>
+                <a href="?page=excel-calculator-pro&tab=templates"
+                    class="nav-tab <?php echo $current_tab === 'templates' ? 'nav-tab-active' : ''; ?>">
+                    <?php _e('Vorlagen', 'excel-calculator-pro'); ?>
+                </a>
                 <a href="?page=excel-calculator-pro&tab=import-export"
                     class="nav-tab <?php echo $current_tab === 'import-export' ? 'nav-tab-active' : ''; ?>">
                     <?php _e('Import/Export', 'excel-calculator-pro'); ?>
@@ -200,6 +206,9 @@ class ECP_Admin
             <div class="tab-content">
                 <?php
                 switch ($current_tab) {
+                    case 'templates':
+                        $this->templates_tab();
+                        break;
                     case 'import-export':
                         $this->import_export_tab();
                         break;
@@ -227,9 +236,6 @@ class ECP_Admin
                 <button id="ecp-new-calculator" class="button button-primary">
                     <?php _e('Neuer Kalkulator', 'excel-calculator-pro'); ?>
                 </button>
-                <button id="ecp-bulk-actions" class="button" style="margin-left: 10px;">
-                    <?php _e('Massenaktionen', 'excel-calculator-pro'); ?>
-                </button>
             </div>
 
             <div id="ecp-calculators-list">
@@ -239,9 +245,6 @@ class ECP_Admin
             <div id="ecp-calculator-editor" style="display: none;">
                 <div class="ecp-editor-header">
                     <h2 id="ecp-editor-title"><?php _e('Kalkulator bearbeiten', 'excel-calculator-pro'); ?></h2>
-                    <button id="ecp-preview-calculator" class="button">
-                        <?php _e('Vorschau', 'excel-calculator-pro'); ?>
-                    </button>
                 </div>
 
                 <div class="ecp-editor-content">
@@ -260,7 +263,6 @@ class ECP_Admin
                         <div class="ecp-section">
                             <h3><?php _e('Eingabefelder', 'excel-calculator-pro'); ?></h3>
                             <div id="ecp-fields-container" class="ecp-sortable">
-                                <!-- Felder werden hier dynamisch hinzugefügt -->
                             </div>
                             <button id="ecp-add-field" class="button">
                                 <?php _e('Feld hinzufügen', 'excel-calculator-pro'); ?>
@@ -270,7 +272,6 @@ class ECP_Admin
                         <div class="ecp-section">
                             <h3><?php _e('Ausgabefelder & Formeln', 'excel-calculator-pro'); ?></h3>
                             <div id="ecp-outputs-container" class="ecp-sortable">
-                                <!-- Ausgabefelder werden hier dynamisch hinzugefügt -->
                             </div>
                             <button id="ecp-add-output" class="button">
                                 <?php _e('Ausgabefeld hinzufügen', 'excel-calculator-pro'); ?>
@@ -297,7 +298,6 @@ class ECP_Admin
                 <input type="hidden" id="calculator-id" value="" />
             </div>
 
-            <!-- Vorschau-Modal -->
             <div id="ecp-preview-modal" class="ecp-modal" style="display: none;">
                 <div class="ecp-modal-content">
                     <div class="ecp-modal-header">
@@ -306,6 +306,59 @@ class ECP_Admin
                     </div>
                     <div class="ecp-modal-body">
                         <div id="ecp-preview-content"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    <?php
+    }
+
+    /**
+     * Vorlagen-Tab
+     */
+    private function templates_tab()
+    {
+        $templates = $this->database->get_templates();
+    ?>
+        <div id="ecp-templates-tab">
+            <p><?php _e('Wählen Sie eine Vorlage aus, um schnell einen neuen Kalkulator zu erstellen:', 'excel-calculator-pro'); ?></p>
+
+            <div class="ecp-templates-grid">
+                <?php foreach ($templates as $template): ?>
+                    <div class="ecp-template-card" data-template-id="<?php echo $template->id; ?>">
+                        <h3><?php echo esc_html($template->name); ?></h3>
+                        <p><?php echo esc_html($template->description); ?></p>
+                        <div class="ecp-template-actions">
+                            <button class="button button-primary ecp-use-template">
+                                <?php _e('Verwenden', 'excel-calculator-pro'); ?>
+                            </button>
+                            <span class="ecp-template-category"><?php echo esc_html($template->category); ?></span>
+                        </div>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+
+            <div id="ecp-template-modal" class="ecp-modal" style="display: none;">
+                <div class="ecp-modal-content">
+                    <div class="ecp-modal-header">
+                        <h3><?php _e('Kalkulator aus Vorlage erstellen', 'excel-calculator-pro'); ?></h3>
+                        <span class="ecp-modal-close">&times;</span>
+                    </div>
+                    <div class="ecp-modal-body">
+                        <table class="form-table">
+                            <tr>
+                                <th><label for="template-calculator-name"><?php _e('Name für neuen Kalkulator:', 'excel-calculator-pro'); ?></label></th>
+                                <td><input type="text" id="template-calculator-name" class="regular-text" required /></td>
+                            </tr>
+                        </table>
+                        <div class="ecp-modal-actions">
+                            <button id="ecp-create-from-template" class="button button-primary">
+                                <?php _e('Erstellen', 'excel-calculator-pro'); ?>
+                            </button>
+                            <button class="button ecp-modal-close">
+                                <?php _e('Abbrechen', 'excel-calculator-pro'); ?>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -380,7 +433,7 @@ class ECP_Admin
         if (empty($calculators)) {
             echo '<div class="ecp-empty-state">';
             echo '<p>' . __('Noch keine Kalkulatoren erstellt.', 'excel-calculator-pro') . '</p>';
-            echo '<p>' . __('Erstellen Sie Ihren ersten Kalkulator.', 'excel-calculator-pro') . '</p>';
+            echo '<p>' . __('Erstellen Sie Ihren ersten Kalkulator oder verwenden Sie eine Vorlage.', 'excel-calculator-pro') . '</p>';
             echo '</div>';
             return;
         }
@@ -434,12 +487,21 @@ class ECP_Admin
             'settings' => $_POST['settings'] ?? array()
         );
 
-        $result = $this->database->save_calculator($calculator_data);
+        // Versuche, die Daten zu sanitizen und zu validieren (Beispielhaft)
+        try {
+            // Dies würde eine Methode in ECP_Security_Manager aufrufen, falls vorhanden
+            // $sanitized_data = ECP_Security_Manager::sanitize_calculator_data($calculator_data);
+            // Für jetzt verwenden wir die übergebenen Daten, aber Logging bei Fehlern
+            $result = $this->database->save_calculator($calculator_data);
 
-        if ($result) {
-            wp_send_json_success(array('id' => $result));
-        } else {
-            wp_send_json_error(__('Fehler beim Speichern', 'excel-calculator-pro'));
+            if ($result) {
+                wp_send_json_success(array('id' => $result));
+            } else {
+                wp_send_json_error(__('Fehler beim Speichern des Kalkulators.', 'excel-calculator-pro'));
+            }
+        } catch (Exception $e) {
+            error_log("ECP Save Calculator Error: " . $e->getMessage());
+            wp_send_json_error(__('Fehler beim Speichern: ', 'excel-calculator-pro') . $e->getMessage());
         }
     }
 
@@ -486,9 +548,9 @@ class ECP_Admin
     }
 
     /**
-     * AJAX: Kalkulator exportieren
+     * AJAX: Aus Vorlage erstellen
      */
-    public function ajax_export_calculator()
+    public function ajax_create_from_template()
     {
         check_ajax_referer('ecp_admin_nonce', 'nonce');
 
@@ -496,21 +558,46 @@ class ECP_Admin
             wp_send_json_error(__('Unzureichende Berechtigungen', 'excel-calculator-pro'));
         }
 
-        $calculator_id = intval($_POST['calculator_id']);
-        $calculator = $this->database->export_calculator($calculator_id);
+        $template_id = intval($_POST['template_id']);
+        $name = sanitize_text_field($_POST['name']);
 
-        if ($calculator) {
-            $filename = sanitize_file_name($calculator->name) . '_calculator.json';
+        $result = $this->database->create_from_template($template_id, $name);
+
+        if ($result) {
+            wp_send_json_success(array('id' => $result));
+        } else {
+            wp_send_json_error(__('Fehler beim Erstellen aus Vorlage', 'excel-calculator-pro'));
+        }
+    }
+
+    /**
+     * AJAX: Kalkulator exportieren
+     */
+    public function ajax_export_calculator()
+    {
+        check_ajax_referer('ecp_admin_nonce', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            // Anstatt wp_send_json_error, was für AJAX-Antworten gedacht ist,
+            // hier eine Fehlermeldung ausgeben und beenden, da dies ein direkter Download sein soll.
+            wp_die(__('Unzureichende Berechtigungen', 'excel-calculator-pro'));
+        }
+
+        $calculator_id = intval($_POST['calculator_id']);
+        $calculator = $this->database->export_calculator($calculator_id); // export_calculator gibt bereits ein Array oder false zurück
+
+        if ($calculator && is_array($calculator)) { // Sicherstellen, dass es ein Array ist
+            $filename = sanitize_file_name($calculator['name'] ?? 'calculator_export') . '_calculator.json';
 
             header('Content-Type: application/json');
             header('Content-Disposition: attachment; filename="' . $filename . '"');
             header('Cache-Control: no-cache, must-revalidate');
-            header('Expires: Sat, 26 Jul 1997 05:00:00 GMT');
+            header('Expires: Sat, 26 Jul 1997 05:00:00 GMT'); // Verhindert Caching
 
             echo json_encode($calculator, JSON_PRETTY_PRINT);
             exit;
         } else {
-            wp_send_json_error(__('Kalkulator nicht gefunden', 'excel-calculator-pro'));
+            wp_die(__('Kalkulator nicht gefunden oder Exportfehler', 'excel-calculator-pro'));
         }
     }
 
@@ -525,16 +612,30 @@ class ECP_Admin
             wp_send_json_error(__('Unzureichende Berechtigungen', 'excel-calculator-pro'));
         }
 
-        if (!isset($_FILES['import_file'])) {
-            wp_send_json_error(__('Keine Datei hochgeladen', 'excel-calculator-pro'));
+        if (!isset($_FILES['import_file']) || $_FILES['import_file']['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error(__('Keine Datei hochgeladen oder Fehler beim Upload.', 'excel-calculator-pro'));
         }
 
         $file = $_FILES['import_file'];
-        $content = file_get_contents($file['tmp_name']);
-        $data = json_decode($content, true);
 
-        if (!$data) {
-            wp_send_json_error(__('Ungültige JSON-Datei', 'excel-calculator-pro'));
+        // Dateityp prüfen (sollte application/json sein)
+        if ($file['type'] !== 'application/json') {
+            wp_send_json_error(__('Ungültiger Dateityp. Bitte laden Sie eine JSON-Datei hoch.', 'excel-calculator-pro'));
+            return;
+        }
+
+        $content = file_get_contents($file['tmp_name']);
+        $data = json_decode($content, true); // true für assoziatives Array
+
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error(__('Ungültige JSON-Datei: ', 'excel-calculator-pro') . json_last_error_msg());
+            return;
+        }
+
+        // Grundlegende Validierung der erwarteten Struktur
+        if (!isset($data['name']) || !isset($data['fields']) || !isset($data['formulas'])) {
+            wp_send_json_error(__('Die JSON-Datei hat nicht die erwartete Struktur.', 'excel-calculator-pro'));
+            return;
         }
 
         $result = $this->database->import_calculator($data);
@@ -542,7 +643,7 @@ class ECP_Admin
         if ($result) {
             wp_send_json_success(array('id' => $result));
         } else {
-            wp_send_json_error(__('Fehler beim Importieren', 'excel-calculator-pro'));
+            wp_send_json_error(__('Fehler beim Importieren des Kalkulators.', 'excel-calculator-pro'));
         }
     }
 
@@ -561,8 +662,16 @@ class ECP_Admin
 
         echo '<select name="ecp_general_settings[default_currency]">';
         $currencies = array('CHF' => 'CHF (Schweizer Franken)', 'EUR' => 'EUR (Euro)', 'USD' => 'USD (US-Dollar)');
+        // Währungssymbole aus Filter anwenden, falls vorhanden
+        $custom_symbols = apply_filters('ecp_currency_symbols', array());
+        foreach ($custom_symbols as $code => $symbol_unused) {
+            if (!isset($currencies[$code])) { // Füge nur hinzu, wenn nicht schon Standard
+                $currencies[$code] = $code; // Einfach den Code als Namen, wenn kein spezifischer Name da ist
+            }
+        }
+
         foreach ($currencies as $code => $name) {
-            echo '<option value="' . $code . '"' . selected($currency, $code, false) . '>' . $name . '</option>';
+            echo '<option value="' . esc_attr($code) . '"' . selected($currency, $code, false) . '>' . esc_html($name) . '</option>';
         }
         echo '</select>';
     }
@@ -579,13 +688,13 @@ class ECP_Admin
             'en_US' => 'USA (1,234.56)'
         );
         foreach ($formats as $code => $name) {
-            echo '<option value="' . $code . '"' . selected($format, $code, false) . '>' . $name . '</option>';
+            echo '<option value="' . esc_attr($code) . '"' . selected($format, $code, false) . '>' . esc_html($name) . '</option>';
         }
         echo '</select>';
     }
 
     /**
-     * Farb-Sektion Callback - NEU
+     * Farb-Sektion Callback
      */
     public function color_section_callback()
     {
@@ -593,7 +702,7 @@ class ECP_Admin
     }
 
     /**
-     * Primärfarbe Callback - NEU
+     * Primärfarbe Callback
      */
     public function primary_color_field_callback()
     {
@@ -605,7 +714,7 @@ class ECP_Admin
     }
 
     /**
-     * Sekundärfarbe Callback - NEU
+     * Sekundärfarbe Callback
      */
     public function secondary_color_field_callback()
     {
@@ -617,7 +726,7 @@ class ECP_Admin
     }
 
     /**
-     * Hintergrundfarbe Callback - NEU
+     * Hintergrundfarbe Callback
      */
     public function background_color_field_callback()
     {
@@ -629,7 +738,7 @@ class ECP_Admin
     }
 
     /**
-     * Kalkulator-Breite Callback - NEU
+     * Kalkulator-Breite Callback
      */
     public function calculator_width_field_callback()
     {
