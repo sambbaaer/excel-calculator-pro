@@ -91,22 +91,32 @@ class ECP_Admin {
             )
         ));
     }
-    
+
     /**
      * Admin-Initialisierung
      */
-    public function admin_init() {
+    public function admin_init()
+    {
         // Einstellungen registrieren
         register_setting('ecp_settings', 'ecp_general_settings');
-        
-        // Einstellungssektion
+        register_setting('ecp_settings', 'ecp_color_settings'); // NEU
+
+        // Allgemeine Einstellungssektion
         add_settings_section(
             'ecp_general_section',
             __('Allgemeine Einstellungen', 'excel-calculator-pro'),
             array($this, 'general_section_callback'),
             'ecp_settings'
         );
-        
+
+        // Farb-Einstellungssektion - NEU
+        add_settings_section(
+            'ecp_color_section',
+            __('Farb- und Design-Einstellungen', 'excel-calculator-pro'),
+            array($this, 'color_section_callback'),
+            'ecp_settings'
+        );
+
         // Einstellungsfelder
         add_settings_field(
             'default_currency',
@@ -115,13 +125,46 @@ class ECP_Admin {
             'ecp_settings',
             'ecp_general_section'
         );
-        
+
         add_settings_field(
             'number_format',
             __('Zahlenformat', 'excel-calculator-pro'),
             array($this, 'number_format_field_callback'),
             'ecp_settings',
             'ecp_general_section'
+        );
+
+        // NEU: Farbfelder
+        add_settings_field(
+            'primary_color',
+            __('Primärfarbe', 'excel-calculator-pro'),
+            array($this, 'primary_color_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+
+        add_settings_field(
+            'secondary_color',
+            __('Sekundärfarbe', 'excel-calculator-pro'),
+            array($this, 'secondary_color_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+
+        add_settings_field(
+            'background_color',
+            __('Hintergrundfarbe', 'excel-calculator-pro'),
+            array($this, 'background_color_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
+        );
+
+        add_settings_field(
+            'calculator_width',
+            __('Standard-Breite', 'excel-calculator-pro'),
+            array($this, 'calculator_width_field_callback'),
+            'ecp_settings',
+            'ecp_color_section'
         );
     }
     
@@ -604,83 +647,7 @@ class ECP_Admin {
             echo '<option value="' . $code . '"' . selected($format, $code, false) . '>' . $name . '</option>';
         }
         echo '</select>';
-    }
-
-    /**
-     * Erweiterte Admin-Initialisierung - zu admin_init() hinzufügen
-     */
-    public function admin_init()
-    {
-        // Bestehende Einstellungen registrieren
-        register_setting('ecp_settings', 'ecp_general_settings');
-        register_setting('ecp_settings', 'ecp_color_settings'); // NEU
-
-        // Allgemeine Einstellungssektion
-        add_settings_section(
-            'ecp_general_section',
-            __('Allgemeine Einstellungen', 'excel-calculator-pro'),
-            array($this, 'general_section_callback'),
-            'ecp_settings'
-        );
-
-        // Farb-Einstellungssektion - NEU
-        add_settings_section(
-            'ecp_color_section',
-            __('Farb- und Design-Einstellungen', 'excel-calculator-pro'),
-            array($this, 'color_section_callback'),
-            'ecp_settings'
-        );
-
-        // Bestehende Felder
-        add_settings_field(
-            'default_currency',
-            __('Standard-Währung', 'excel-calculator-pro'),
-            array($this, 'currency_field_callback'),
-            'ecp_settings',
-            'ecp_general_section'
-        );
-
-        add_settings_field(
-            'number_format',
-            __('Zahlenformat', 'excel-calculator-pro'),
-            array($this, 'number_format_field_callback'),
-            'ecp_settings',
-            'ecp_general_section'
-        );
-
-        // NEU: Farbfelder
-        add_settings_field(
-            'primary_color',
-            __('Primärfarbe', 'excel-calculator-pro'),
-            array($this, 'primary_color_field_callback'),
-            'ecp_settings',
-            'ecp_color_section'
-        );
-
-        add_settings_field(
-            'secondary_color',
-            __('Sekundärfarbe', 'excel-calculator-pro'),
-            array($this, 'secondary_color_field_callback'),
-            'ecp_settings',
-            'ecp_color_section'
-        );
-
-        add_settings_field(
-            'background_color',
-            __('Hintergrundfarbe', 'excel-calculator-pro'),
-            array($this, 'background_color_field_callback'),
-            'ecp_settings',
-            'ecp_color_section'
-        );
-
-        add_settings_field(
-            'calculator_width',
-            __('Standard-Breite', 'excel-calculator-pro'),
-            array($this, 'calculator_width_field_callback'),
-            'ecp_settings',
-            'ecp_color_section'
-        );
-    }
+    }  
 
     /**
      * Farb-Sektion Callback - NEU
