@@ -285,22 +285,59 @@
     padding: 8px 0;
 }
 
-.remove-field, .remove-output {
+.remove-field,
+.remove-output {
     position: absolute;
     top: 10px;
     right: 10px;
-    background: #dc3545;
-    color: white;
-    border: none;
-    border-radius: 3px;
-    padding: 4px 8px;
-    font-size: 11px;
+    background: transparent;
+    /* Kein Hintergrund per Default */
+    color: #787c82;
+    /* Standard WordPress Icon-Farbe */
+    border: 1px solid transparent;
+    /* Unsichtbarer Rand für konsistente Größe */
+    border-radius: 50%;
+    /* Kreisrund für besseres Aussehen */
+    padding: 0;
+    /* Padding wird durch feste Größe und Flexbox gehandhabt */
     cursor: pointer;
-    transition: background-color 0.2s ease;
+    transition: all 0.2s ease-in-out;
+    width: 32px;
+    /* Feste Breite */
+    height: 32px;
+    /* Feste Höhe */
+    display: inline-flex;
+    /* Um das Icon perfekt zentrieren zu können */
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    /* Stellt sicher, dass Padding und Border in die Größe einbezogen werden */
 }
 
-.remove-field:hover, .remove-output:hover {
-    background: #c82333;
+.remove-field:hover,
+.remove-output:hover {
+    background: #f8d7da;
+    /* Heller roter Hintergrund beim Hover */
+    color: #dc3545;
+    /* Rotes Icon beim Hover */
+    border-color: #f5c6cb;
+    /* Passender Rand beim Hover */
+}
+
+/* Dashicon für Löschen hinzufügen */
+.remove-field::before,
+.remove-output::before {
+    font-family: "dashicons";
+    content: "\f182";
+    /* Dashicon für 'trash' */
+    font-size: 20px;
+    /* Angepasste Icon-Größe */
+    line-height: 1;
+    /* Stellt sicher, dass das Icon zentriert ist */
+    speak: none;
+    /* Verhindert, dass Screenreader das Icon als Text vorlesen */
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 .field-id {

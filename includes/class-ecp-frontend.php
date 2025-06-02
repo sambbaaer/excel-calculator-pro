@@ -89,33 +89,405 @@ class ECP_Frontend
     }
 
     /**
-     * Inline-Styles mit benutzerdefinierten Farben hinzufügen
-     */
-    public function add_inline_styles()
-    {
-        // Farbeinstellungen abrufen
-        $color_settings = get_option('ecp_color_settings', array());
-        $primary_color = isset($color_settings['primary_color']) ? $color_settings['primary_color'] : '#007cba';
-        $secondary_color = isset($color_settings['secondary_color']) ? $color_settings['secondary_color'] : '#00a0d2';
-        $background_color = isset($color_settings['background_color']) ? $color_settings['background_color'] : '#ffffff';
-        $calculator_width = isset($color_settings['calculator_width']) ? $color_settings['calculator_width'] : 'full';
+ * Inline-Styles mit benutzerdefinierten Farben hinzufügen
+ */
+public function add_inline_styles() {
+    // Farbeinstellungen abrufen
+    $color_settings = get_option('ecp_color_settings', array());
+    $primary_color = isset($color_settings['primary_color']) ? $color_settings['primary_color'] : '#007cba';
+    $secondary_color = isset($color_settings['secondary_color']) ? $color_settings['secondary_color'] : '#00a0d2';
+    $background_color = isset($color_settings['background_color']) ? $color_settings['background_color'] : '#ffffff';
+    $calculator_width = isset($color_settings['calculator_width']) ? $color_settings['calculator_width'] : 'full';
 
-        // Breiten-CSS basierend auf Einstellung
-        $width_css = '';
-        switch ($calculator_width) {
-            case 'contained':
-                $width_css = 'max-width: 700px; margin: 30px auto;';
-                break;
-            case 'large':
-                $width_css = 'max-width: 900px; margin: 30px auto;';
-                break;
-            case 'medium':
-                $width_css = 'max-width: 600px; margin: 30px auto;';
-                break;
-            default: // full
-                $width_css = 'max-width: 100%; width: 100%; margin: 30px 0;';
-                break;
+    // NEU: Einstellung für System Dark Mode abrufen
+    // Standardmäßig ist die Option deaktiviert (false), wenn sie nicht explizit gesetzt ist.
+    $enable_system_dark_mode = isset($color_settings['enable_system_dark_mode']) ? (bool) $color_settings['enable_system_dark_mode'] : false;
+    
+    // Breiten-CSS basierend auf Einstellung
+    $width_css = '';
+    switch ($calculator_width) {
+        case 'contained':
+            $width_css = 'max-width: 700px; margin: 30px auto;';
+            break;
+        case 'large':
+            $width_css = 'max-width: 900px; margin: 30px auto;';
+            break;
+        case 'medium':
+            $width_css = 'max-width: 600px; margin: 30px auto;';
+            break;
+        default: // full
+            $width_css = 'max-width: 100%; width: 100%; margin: 30px 0;';
+            break;
+    }
+    
+    ?>
+    <style id="ecp-inline-styles">
+    /* Excel Calculator Pro Frontend Styles - Dynamische Farben */
+    :root {
+        --ecp-primary-color: <?php echo esc_attr($primary_color); ?>;
+        --ecp-secondary-color: <?php echo esc_attr($secondary_color); ?>;
+        --ecp-background-color: <?php echo esc_attr($background_color); ?>;
+    }
+    
+    /* ... (alle bestehenden CSS-Regeln bis zum Dark Mode Block) ... */
+    .ecp-calculator {
+        <?php echo $width_css; ?> /* */
+        padding: 30px; /* */
+        border: 1px solid #e1e5e9; /* */
+        border-radius: 12px; /* */
+        background: var(--ecp-background-color); /* */
+        box-shadow: 0 4px 15px rgba(0,0,0,0.08); /* */
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; /* */
+        line-height: 1.6; /* */
+        color: #2c3e50; /* */
+        position: relative; /* */
+        overflow: hidden; /* */
+    }
+    
+    .ecp-calculator::before {
+        content: ''; /* */
+        position: absolute; /* */
+        top: 0; /* */
+        left: 0; /* */
+        right: 0; /* */
+        height: 4px; /* */
+        background: linear-gradient(90deg, var(--ecp-primary-color) 0%, var(--ecp-secondary-color) 50%, var(--ecp-primary-color) 100%); /* */
+        background-size: 200% 100%; /* */
+        animation: ecpGradientShift 3s ease-in-out infinite; /* */
+    }
+    
+    @keyframes ecpGradientShift {
+        0%, 100% { background-position: 0% 50%; } /* */
+        50% { background-position: 100% 50%; } /* */
+    }
+    
+    .ecp-calculator-header {
+        margin-bottom: 25px; /* */
+        text-align: center; /* */
+        border-bottom: 2px solid #f8f9fa; /* */
+        padding-bottom: 15px; /* */
+    }
+    
+    .ecp-calculator-title {
+        font-size: 24px; /* */
+        font-weight: 600; /* */
+        color: #2c3e50; /* */
+        margin: 0 0 8px 0; /* */
+    }
+    
+    .ecp-calculator-description {
+        color: #6c757d; /* */
+        font-size: 14px; /* */
+        margin: 0; /* */
+    }
+    
+    .ecp-section {
+        margin-bottom: 30px; /* */
+    }
+    
+    .ecp-section-title {
+        font-size: 18px; /* */
+        font-weight: 600; /* */
+        color: #2c3e50; /* */
+        margin: 0 0 15px 0; /* */
+        padding-bottom: 8px; /* */
+        border-bottom: 1px solid #e9ecef; /* */
+        position: relative; /* */
+        display: flex; /* */
+        align-items: center; /* */
+        gap: 10px; /* */
+    }
+    
+    .ecp-section-title::before {
+        content: ''; /* */
+        width: 4px; /* */
+        height: 20px; /* */
+        background: linear-gradient(135deg, var(--ecp-primary-color), var(--ecp-secondary-color)); /* */
+        border-radius: 2px; /* */
+    }
+    
+    .ecp-field-group, .ecp-output-group {
+        margin-bottom: 20px; /* */
+        display: flex; /* */
+        align-items: center; /* */
+        justify-content: space-between; /* */
+        padding: 15px; /* */
+        background: #f8f9fa; /* */
+        border-radius: 6px; /* */
+        transition: all 0.2s ease; /* */
+        position: relative; /* */
+        overflow: hidden; /* */
+    }
+    
+    .ecp-field-group::before {
+        content: ''; /* */
+        position: absolute; /* */
+        top: 0; /* */
+        left: 0; /* */
+        width: 4px; /* */
+        height: 100%; /* */
+        background: linear-gradient(135deg, var(--ecp-primary-color), var(--ecp-secondary-color)); /* */
+        transform: scaleY(0); /* */
+        transition: transform 0.3s ease; /* */
+    }
+    
+    .ecp-field-group:hover {
+        background: #e9ecef; /* */
+        border-color: var(--ecp-primary-color); /* */
+        transform: translateY(-2px); /* */
+        box-shadow: 0 6px 20px rgba(0, 124, 186, 0.15); /* */
+    }
+    
+    .ecp-field-group:hover::before {
+        transform: scaleY(1); /* */
+    }
+    
+    .ecp-field-group label, .ecp-output-group label {
+        font-weight: 600; /* */
+        color: #495057; /* */
+        margin-right: 15px; /* */
+        min-width: 180px; /* */
+        text-align: left; /* */
+        font-size: 14px; /* */
+    }
+    
+    .ecp-input-field {
+        padding: 12px 16px; /* */
+        border: 2px solid #dee2e6; /* */
+        border-radius: 6px; /* */
+        width: 220px; /* */
+        font-size: 16px; /* */
+        font-weight: 500; /* */
+        transition: all 0.2s ease; /* */
+        background: white; /* */
+        outline: none; /* */
+    }
+    
+    .ecp-input-field:focus {
+        border-color: var(--ecp-primary-color); /* */
+        box-shadow: 0 0 0 3px rgba(0, 124, 186, 0.1); /* */
+        transform: scale(1.02); /* */
+    }
+    
+    .ecp-input-field:invalid {
+        border-color: #dc3545; /* */
+    }
+    
+    .ecp-output-group {
+        background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%); /* */
+        border: 1px solid #b3d9e6; /* */
+        border-left: 5px solid var(--ecp-primary-color); /* */
+    }
+    
+    .ecp-output-field {
+        font-weight: 700; /* */
+        font-size: 18px; /* */
+        color: var(--ecp-primary-color); /* */
+        background: white; /* */
+        padding: 12px 16px; /* */
+        border-radius: 6px; /* */
+        min-width: 120px; /* */
+        text-align: right; /* */
+        border: 2px solid var(--ecp-primary-color); /* */
+        transition: all 0.3s ease; /* */
+        box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1); /* */
+    }
+    
+    .ecp-output-field.ecp-animated {
+        transform: scale(1.05); /* */
+        box-shadow: 0 6px 20px rgba(0, 124, 186, 0.25); /* */
+        background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%); /* */
+    }
+    
+    .ecp-output-field.ecp-changed {
+        animation: ecpPulseGlow 0.6s ease-in-out; /* */
+    }
+    
+    @keyframes ecpPulseGlow {
+        0% { 
+            transform: scale(1); /* */
+            box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1); /* */
         }
+        50% { 
+            transform: scale(1.08); /* */
+            box-shadow: 0 8px 25px rgba(0, 124, 186, 0.3); /* */
+            background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%); /* */
+        }
+        100% { 
+            transform: scale(1); /* */
+            box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1); /* */
+        }
+    }
+    
+    .ecp-field-help, .ecp-input-unit, .ecp-output-unit {
+        font-size: 12px; /* */
+        color: #6c757d; /* */
+        margin-top: 4px; /* */
+        font-style: italic; /* */
+    }
+    
+    .ecp-error-message {
+        color: #dc3545; /* */
+        font-size: 12px; /* */
+        margin-top: 4px; /* */
+    }
+    
+    .ecp-loading {
+        opacity: 0.6; /* */
+        pointer-events: none; /* */
+    }
+    
+    /* Responsive Design */
+    @media (max-width: 1200px) {
+        .ecp-calculator {
+            margin: 20px 15px !important; /* */
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .ecp-calculator {
+            margin: 15px !important; /* */
+            padding: 25px 20px; /* */
+        }
+        
+        .ecp-field-group, .ecp-output-group {
+            flex-direction: column; /* */
+            align-items: flex-start; /* */
+            text-align: left; /* */
+        }
+        
+        .ecp-field-group label, .ecp-output-group label {
+            margin-bottom: 8px; /* */
+            min-width: auto; /* */
+            width: 100%; /* */
+        }
+        
+        .ecp-input-field {
+            width: 100%; /* */
+            max-width: none; /* */
+        }
+        
+        .ecp-output-field {
+            width: 100%; /* */
+            text-align: center; /* */
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .ecp-calculator {
+            margin: 10px !important; /* */
+            padding: 20px 15px; /* */
+        }
+        
+        .ecp-calculator-title {
+            font-size: 20px; /* */
+        }
+        
+        .ecp-section-title {
+            font-size: 16px; /* */
+        }
+    }
+
+    /* Dark Mode Support - NUR WENN AKTIVIERT */
+    <?php if ($enable_system_dark_mode): ?>
+    @media (prefers-color-scheme: dark) {
+        .ecp-calculator {
+            background: #1e1e1e !important; /* Wichtig, um evtl. andere :root Variablen zu überschreiben */ /* */
+            border-color: #404040 !important; /* */
+            color: #e0e0e0 !important; /* */
+        }
+        
+        .ecp-calculator-title, .ecp-section-title {
+            color: #ffffff; /* */
+        }
+        
+        .ecp-section-title {
+            border-bottom-color: #404040; /* */
+        }
+        
+        .ecp-field-group { /* Angepasst von der Vorlage, da der :hover Effekt und ::before Gradienten evtl. nicht gut aussehen */
+            background: #2d2d2d !important; /* */
+        }
+        
+        .ecp-field-group:hover {
+            background: #353535 !important; /* */
+        }
+        
+        .ecp-input-field {
+            background: #1e1e1e !important; /* */
+            border-color: #404040 !important; /* */
+            color: #e0e0e0 !important; /* */
+        }
+        
+        .ecp-input-field:focus {
+            background: #2d2d2d !important; /* */
+            /* border-color: var(--ecp-primary-color); -> wird von oben übernommen, ggf. anpassen */
+        }
+        
+        .ecp-output-group { /* Angepasst von der Vorlage */
+            background: #1a3a4a !important; /* */
+            /* border-left-color: var(--ecp-primary-color); -> wird von oben übernommen, ggf. anpassen */
+        }
+        
+        .ecp-output-field {
+            background: #1e1e1e !important; /* */
+            color: var(--ecp-secondary-color) !important; /* Beibehaltung der Akzentfarbe für Ergebnisse */ /* */
+            /* border-color: var(--ecp-primary-color); -> wird von oben übernommen, ggf. anpassen */
+        }
+
+        .ecp-output-field.ecp-changed {
+            animation: ecpPulseGlowDark 0.6s ease-in-out;
+        }
+        /* Eigene Keyframe-Animation für Dark Mode, um Konflikte mit hellen Farben zu vermeiden */
+        @keyframes ecpPulseGlowDark {
+            0% { 
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(var(--ecp-secondary-color-rgb, 80, 180, 220), 0.15); /* Annahme: Sekundärfarbe ist hell genug */
+            }
+            50% { 
+                transform: scale(1.08);
+                box-shadow: 0 8px 25px rgba(var(--ecp-secondary-color-rgb, 80, 180, 220), 0.35);
+                background: linear-gradient(135deg, #2a4a5a 0%, #1a2a3a 100%) !important;
+            }
+            100% { 
+                transform: scale(1);
+                box-shadow: 0 2px 8px rgba(var(--ecp-secondary-color-rgb, 80, 180, 220), 0.15);
+            }
+        }
+    }
+    <?php endif; ?>
+    
+    /* Print Styles */
+    @media print {
+        .ecp-calculator {
+            box-shadow: none !important; /* */
+            border: 1px solid #000 !important; /* */
+            background: white !important; /* */
+            color: black !important; /* */
+            max-width: none !important; /* */
+            margin: 0 !important; /* */
+            padding: 20px !important; /* */
+        }
+        
+        .ecp-calculator::before {
+            display: none !important; /* */
+        }
+        
+        .ecp-field-group, .ecp-output-group {
+            background: white !important; /* */
+            border: 1px solid #000 !important; /* */
+        }
+        
+        .ecp-input-field, .ecp-output-field {
+            border: 1px solid #000 !important; /* */
+            background: white !important; /* */
+            color: black !important; /* */
+            box-shadow: none !important; /* */
+        }
+    }
+    </style>
+    <?php
+}
 
 ?>
         <style id="ecp-inline-styles">

@@ -166,6 +166,14 @@ class ECP_Admin
         );
 
         add_settings_field(
+            'enable_system_dark_mode', // ID des Feldes
+            __('System-Dark-Mode folgen', 'excel-calculator-pro'), // Titel des Feldes
+            array($this, 'system_dark_mode_field_callback'), // Callback-Funktion für die Ausgabe
+            'ecp_settings', // Seite, auf der das Feld angezeigt wird
+            'ecp_color_section' // Sektion, zu der das Feld gehört
+        );
+
+        add_settings_field(
             'calculator_width',
             __('Standard-Breite', 'excel-calculator-pro'),
             array($this, 'calculator_width_field_callback'),
@@ -758,5 +766,21 @@ class ECP_Admin
         }
         echo '</select>';
         echo '<p class="description">' . __('Standard-Breite für neue Kalkulatoren', 'excel-calculator-pro') . '</p>';
+    }
+   
+    /**
+     * Callback für System-Dark-Mode-Einstellung - NEU
+     */
+    public function system_dark_mode_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        // Standardmäßig ist die Option deaktiviert, falls sie noch nicht gespeichert wurde.
+        $checked = isset($options['enable_system_dark_mode']) ? checked($options['enable_system_dark_mode'], 1, false) : '';
+
+        echo '<label for="ecp_enable_system_dark_mode">'; // ID für Label angepasst
+        echo '<input type="checkbox" id="ecp_enable_system_dark_mode" name="ecp_color_settings[enable_system_dark_mode]" value="1" ' . $checked . ' />';
+        echo ' ' . __('Frontend-Kalkulatoren an das helle/dunkle Design des Betriebssystems anpassen', 'excel-calculator-pro');
+        echo '</label>';
+        echo '<p class="description">' . __('Wenn aktiviert, versucht das Plugin, das Farbschema des Nutzer-Betriebssystems (Hell/Dunkel) zu übernehmen. Deaktivieren Sie diese Option, wenn der automatische Dark-Mode nicht zu Ihrem Webseiten-Layout passt.', 'excel-calculator-pro') . '</p>';
     }
 }

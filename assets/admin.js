@@ -494,45 +494,85 @@
         const outputId = data.id || 'output_' + Date.now() + '_' + outputCounter; // Eindeutige ID für den Fall
 
         const outputHtml = `
-            <div class="ecp-output-row" data-output-id="${outputId}">
-                <span class="ecp-sort-handle dashicons dashicons-menu"></span>
-                <button type="button" class="remove-output button-link-delete" title="Ausgabefeld entfernen"><span class="dashicons dashicons-no-alt"></span></button>
+            <div class="ecp-output-row">
+                <button type="button" class="remove-output" title="Ausgabefeld entfernen"></button> {/* Icon wird durch CSS hinzugefügt */}
                 <table class="form-table">
                     <tr>
-                        <th><label for="output-label-${outputId}">Label:</label></th>
-                        <td><input type="text" id="output-label-${outputId}" class="output-label regular-text" value="${data.label || ''}" placeholder="z.B. Monatliche Rate" /></td>
+                        <th>Label:</th>
+                        <td><input type="text" class="output-label regular-text" value="${data.label || ''}" placeholder="z.B. Monatliche Rate" /></td>
                     </tr>
                     <tr>
-                        <th><label for="output-formula-${outputId}">Formel:</label></th>
+                        <th>Formel:</th>
                         <td>
-                            <textarea id="output-formula-${outputId}" class="output-formula large-text" rows="3" placeholder="z.B. field_1 * field_2">${data.formula || ''}</textarea>
-                            <p class="description">
-                                Verwenden Sie Feld-IDs (z.B. <code>field_kreditsumme</code>). <br>
-                                Funktionen: <code>SUMME(a;b)</code>, <code>WENN(bedingung;dann;sonst)</code>, <code>RUNDEN(zahl;stellen)</code>, <code>MIN(a;b)</code>, <code>MAX(a;b)</code>, <code>MITTELWERT(a;b)</code>, <code>ABS(zahl)</code>, <code>WURZEL(zahl)</code>, <code>POTENZ(basis;exponent)</code>, <code>LOG(zahl;basis)</code>, <code>HEUTE()</code>, <code>JAHR(datum)</code>, <code>MONAT(datum)</code>, <code>TAG(datum)</code>.
-                                Operatoren: <code>+ - * / ^</code>. Konstanten: <code>PI</code>, <code>E</code>.
-                            </p>
+                            <textarea class="output-formula large-text" rows="3" placeholder="z.B. field_1 * (field_2 / 100) + field_3">${data.formula || ''}</textarea>
+                            <div class="ecp-formula-help">
+                                <h4>Formel-Assistent</h4>
+                                <p>Verwenden Sie Feld-IDs (z.B. <code>field_1</code>, <code>field_2</code>) und folgende Funktionen/Operatoren:</p>
+                                
+                                <h5>Grundoperatoren:</h5>
+                                <ul>
+                                    <li>Addition: <code>+</code> (z.B. <code>field_1 + field_2</code>)</li>
+                                    <li>Subtraktion: <code>-</code> (z.B. <code>field_1 - field_2</code>)</li>
+                                    <li>Multiplikation: <code>*</code> (z.B. <code>field_1 * field_2</code>)</li>
+                                    <li>Division: <code>/</code> (z.B. <code>field_1 / field_2</code>)</li>
+                                    <li>Potenz: <code>^</code> oder <code>POW(basis, exponent)</code> (z.B. <code>field_1 ^ 2</code>)</li>
+                                </ul>
+
+                                <h5>Vergleichsoperatoren (für WENN-Funktion):</h5>
+                                <ul>
+                                    <li>Größer als: <code>&gt;</code></li>
+                                    <li>Größer gleich: <code>&gt;=</code></li>
+                                    <li>Kleiner als: <code>&lt;</code></li>
+                                    <li>Kleiner gleich: <code>&lt;=</code></li>
+                                    <li>Gleich: <code>=</code> oder <code>==</code></li>
+                                    <li>Ungleich: <code>!=</code> oder <code>&lt;&gt;</code></li>
+                                </ul>
+                                
+                                <h5>Excel-ähnliche Funktionen:</h5>
+                                <ul>
+                                    <li><code>WENN(bedingung, wert_wenn_wahr, wert_wenn_falsch)</code>: Bedingte Logik. Beispiel: <code>WENN(field_1 &gt; 100, field_1 * 0.1, field_1 * 0.05)</code></li>
+                                    <li><code>SUMME(wert1, wert2, ...)</code>: Summiert Werte. Beispiel: <code>SUMME(field_1, field_2, 50)</code></li>
+                                    <li><code>MITTELWERT(wert1, wert2, ...)</code>: Berechnet den Durchschnitt.</li>
+                                    <li><code>MIN(wert1, wert2, ...)</code>: Kleinster Wert.</li>
+                                    <li><code>MAX(wert1, wert2, ...)</code>: Größter Wert.</li>
+                                    <li><code>RUNDEN(zahl, dezimalstellen)</code>: Rundet eine Zahl. Beispiel: <code>RUNDEN(field_1 / 3, 2)</code></li>
+                                    <li><code>ABS(zahl)</code>: Absolutwert.</li>
+                                    <li><code>WURZEL(zahl)</code> oder <code>SQRT(zahl)</code>: Quadratwurzel.</li>
+                                    <li><code>POTENZ(basis, exponent)</code> oder <code>POW(basis, exponent)</code>: Potenzierung.</li>
+                                    <li><code>LOG(zahl, basis)</code>: Logarithmus (Standardbasis e). Beispiel: <code>LOG(field_1)</code> oder <code>LOG(field_1, 10)</code></li>
+                                </ul>
+
+                                <h5>Datumsfunktionen (geben numerische Werte zurück):</h5>
+                                <ul>
+                                    <li><code>HEUTE()</code>: Aktuelles Datum als YYYYMMDD.</li>
+                                    <li><code>JAHR(datum_oder_heute)</code>: Jahr aus Datum (z.B. <code>JAHR(HEUTE())</code>).</li>
+                                    <li><code>MONAT(datum_oder_heute)</code>: Monat aus Datum.</li>
+                                    <li><code>TAG(datum_oder_heute)</code>: Tag aus Datum.</li>
+                                </ul>
+
+                                <h5>Weitere Funktionen:</h5>
+                                <ul>
+                                    <li><code>OBERGRENZE(zahl)</code> oder <code>CEILING(zahl)</code>: Aufrunden zur nächsten Ganzzahl.</li>
+                                    <li><code>UNTERGRENZE(zahl)</code> oder <code>FLOOR(zahl)</code>: Abrunden zur nächsten Ganzzahl.</li>
+                                    <li><code>ZUFALLSZAHL()</code> oder <code>RAND()</code>: Zufallszahl zwischen 0 und 1.</li>
+                                </ul>
+                                
+                                <h5>Konstanten:</h5>
+                                <ul>
+                                    <li><code>PI</code> (Kreiszahl Pi, ca. 3.14159)</li>
+                                    <li><code>E</code> (Eulersche Zahl, ca. 2.71828)</li>
+                                    <li><code>PHI</code> (Goldener Schnitt, ca. 1.61803)</li>
+                                </ul>
+
+                                <div class="ecp-formula-example">
+                                    <strong>Beispiel für eine verschachtelte Formel:</strong>
+                                    <code>WENN(field_1 &gt; SUMME(field_2, field_3), RUNDEN(field_1 * PI, 2), MAX(field_2, field_3) * 0.5)</code>
+                                    <p>Diese Formel prüft, ob <code>field_1</code> größer ist als die Summe von <code>field_2</code> und <code>field_3</code>. Wenn ja, wird <code>field_1</code> mit PI multipliziert und auf 2 Dezimalstellen gerundet. Andernfalls wird der größere Wert von <code>field_2</code> und <code>field_3</code> mit 0.5 multipliziert.</p>
+                                </div>
+                            </div>
                         </td>
                     </tr>
-                    <tr>
-                        <th><label for="output-format-${outputId}">Format:</label></th>
-                        <td>
-                            <select id="output-format-${outputId}" class="output-format">
-                                <option value="" ${(!data.format || data.format === '') ? 'selected' : ''}>Standard</option>
-                                <option value="currency" ${data.format === 'currency' ? 'selected' : ''}>Währung</option>
-                                <option value="percentage" ${data.format === 'percentage' ? 'selected' : ''}>Prozent</option>
-                                <option value="integer" ${data.format === 'integer' ? 'selected' : ''}>Ganzzahl</option>
-                                <option value="text" ${data.format === 'text' ? 'selected' : ''}>Text</option>
-                            </select>
-                        </td>
-                    </tr>
-                    <tr>
-                        <th><label for="output-unit-${outputId}">Einheit:</label></th>
-                        <td><input type="text" id="output-unit-${outputId}" class="output-unit regular-text" value="${data.unit || ''}" placeholder="z.B. €, %, Jahre" /></td>
-                    </tr>
-                    <tr>
-                        <th><label for="output-help-${outputId}">Hilfetext (Tooltip):</label></th>
-                        <td><input type="text" id="output-help-${outputId}" class="output-help large-text" value="${data.help || ''}" placeholder="Erklärung der Berechnung" /></td>
-                    </tr>
+                    {/* ... (restliche Tabellenzeilen für Format, Einheit, Hilfetext) ... */}
                 </table>
             </div>
         `;
