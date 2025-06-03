@@ -108,32 +108,47 @@ class ECP_Frontend
         $color_settings = get_option('ecp_color_settings', array());
         $primary_color = !empty($color_settings['primary_color']) ? $color_settings['primary_color'] : '#007cba';
         $secondary_color = !empty($color_settings['secondary_color']) ? $color_settings['secondary_color'] : '#00a0d2';
-        $background_color_light = !empty($color_settings['background_color']) ? $color_settings['background_color'] : '#ffffff'; // Explizit für Light Mode
 
         $calculator_width_option = isset($color_settings['calculator_width']) ? $color_settings['calculator_width'] : 'full';
         $enable_system_dark_mode = isset($color_settings['enable_system_dark_mode']) && $color_settings['enable_system_dark_mode'] == '1';
 
-        // Standardfarben für Light Mode (werden als Basis-Variablen gesetzt)
-        $text_color_light = '#2c3e50';
-        $text_light_light = '#6c757d';
-        $border_color_light = '#e1e5e9';
-        $input_bg_light = '#ffffff';
-        $input_border_light = '#dee2e6';
-        $output_group_bg_light = 'linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%)';
-        $output_group_border_light = '#b3d9e6';
-        $output_field_bg_light = '#ffffff';
+        // Light Mode Farben mit Fallbacks
+        $background_color_light = !empty($color_settings['background_color_light']) ? $color_settings['background_color_light'] : '#ffffff';
+        $text_color_light = !empty($color_settings['text_color_light']) ? $color_settings['text_color_light'] : '#2c3e50';
+        $text_light_light = !empty($color_settings['text_light_light']) ? $color_settings['text_light_light'] : '#6c757d';
+        $border_color_light = !empty($color_settings['border_color_light']) ? $color_settings['border_color_light'] : '#e1e5e9';
+        $input_bg_light = !empty($color_settings['input_bg_light']) ? $color_settings['input_bg_light'] : '#ffffff';
+        $input_border_light = !empty($color_settings['input_border_light']) ? $color_settings['input_border_light'] : '#dee2e6';
+        $field_group_bg_light = !empty($color_settings['field_group_bg_light']) ? $color_settings['field_group_bg_light'] : '#f8f9fa';
+        $field_group_hover_bg_light = !empty($color_settings['field_group_hover_bg_light']) ? $color_settings['field_group_hover_bg_light'] : '#e9ecef';
 
-        // Farben für Dark Mode (werden nur überschrieben, wenn Dark Mode aktiv ist)
-        $background_color_dark = '#1e1e1e';
-        $text_color_dark = '#e0e0e0';
-        $text_light_dark = '#adb5bd';
-        $border_color_dark = '#404040';
-        $input_bg_dark = '#2d2d2d';
-        $input_border_dark = '#505050';
-        $output_group_bg_dark = 'linear-gradient(135deg, #1a3a4a 0%, #0f2f3f 100%)';
-        $output_group_border_dark = $primary_color; // Kann auch eine spezifische Darkmode-Farbe sein
-        $output_field_bg_dark = '#2d2d2d';
+        // Gradient-Farben für Light Mode
+        $output_group_bg_gradient_start_light = !empty($color_settings['output_group_bg_gradient_start_light']) ? $color_settings['output_group_bg_gradient_start_light'] : '#e8f4f8';
+        $output_group_bg_gradient_end_light = !empty($color_settings['output_group_bg_gradient_end_light']) ? $color_settings['output_group_bg_gradient_end_light'] : '#f0f9ff';
+        $output_group_bg_light = 'linear-gradient(135deg, ' . $output_group_bg_gradient_start_light . ' 0%, ' . $output_group_bg_gradient_end_light . ' 100%)';
 
+        $output_group_border_light = !empty($color_settings['output_group_border_light']) ? $color_settings['output_group_border_light'] : '#b3d9e6';
+        $output_field_bg_light = !empty($color_settings['output_field_bg_light']) ? $color_settings['output_field_bg_light'] : '#ffffff';
+        $copy_icon_feedback_color_light = !empty($color_settings['copy_icon_feedback_color_light']) ? $color_settings['copy_icon_feedback_color_light'] : '#28a745';
+
+        // Dark Mode Farben mit Fallbacks
+        $background_color_dark = !empty($color_settings['background_color_dark']) ? $color_settings['background_color_dark'] : '#1e1e1e';
+        $text_color_dark = !empty($color_settings['text_color_dark']) ? $color_settings['text_color_dark'] : '#e0e0e0';
+        $text_light_dark = !empty($color_settings['text_light_dark']) ? $color_settings['text_light_dark'] : '#adb5bd';
+        $border_color_dark = !empty($color_settings['border_color_dark']) ? $color_settings['border_color_dark'] : '#404040';
+        $input_bg_dark = !empty($color_settings['input_bg_dark']) ? $color_settings['input_bg_dark'] : '#2d2d2d';
+        $input_border_dark = !empty($color_settings['input_border_dark']) ? $color_settings['input_border_dark'] : '#505050';
+        $field_group_bg_dark = !empty($color_settings['field_group_bg_dark']) ? $color_settings['field_group_bg_dark'] : '#2d2d2d';
+        $field_group_hover_bg_dark = !empty($color_settings['field_group_hover_bg_dark']) ? $color_settings['field_group_hover_bg_dark'] : '#353535';
+
+        // Gradient-Farben für Dark Mode
+        $output_group_bg_gradient_start_dark = !empty($color_settings['output_group_bg_gradient_start_dark']) ? $color_settings['output_group_bg_gradient_start_dark'] : '#1a3a4a';
+        $output_group_bg_gradient_end_dark = !empty($color_settings['output_group_bg_gradient_end_dark']) ? $color_settings['output_group_bg_gradient_end_dark'] : '#0f2f3f';
+        $output_group_bg_dark = 'linear-gradient(135deg, ' . $output_group_bg_gradient_start_dark . ' 0%, ' . $output_group_bg_gradient_end_dark . ' 100%)';
+
+        $output_group_border_dark = !empty($color_settings['output_group_border_dark']) ? $color_settings['output_group_border_dark'] : $primary_color;
+        $output_field_bg_dark = !empty($color_settings['output_field_bg_dark']) ? $color_settings['output_field_bg_dark'] : '#2d2d2d';
+        $copy_icon_feedback_color_dark = !empty($color_settings['copy_icon_feedback_color_dark']) ? $color_settings['copy_icon_feedback_color_dark'] : '#34d399';
 
         $width_css = '';
         switch ($calculator_width_option) {
@@ -157,7 +172,7 @@ class ECP_Frontend
                 --ecp-primary-color: <?php echo esc_attr($primary_color); ?>;
                 --ecp-secondary-color: <?php echo esc_attr($secondary_color); ?>;
 
-                /* Light Mode Default Variablen */
+                /* Light Mode Variablen */
                 --ecp-background-color: <?php echo esc_attr($background_color_light); ?>;
                 --ecp-text-color: <?php echo esc_attr($text_color_light); ?>;
                 --ecp-text-light: <?php echo esc_attr($text_light_light); ?>;
@@ -165,28 +180,25 @@ class ECP_Frontend
                 --ecp-input-bg: <?php echo esc_attr($input_bg_light); ?>;
                 --ecp-input-border: <?php echo esc_attr($input_border_light); ?>;
                 --ecp-input-focus-border: var(--ecp-primary-color);
-                /* Behält Primärfarbe für Fokus */
                 --ecp-output-group-bg: <?php echo esc_attr($output_group_bg_light); ?>;
                 --ecp-output-group-border: <?php echo esc_attr($output_group_border_light); ?>;
                 --ecp-output-field-bg: <?php echo esc_attr($output_field_bg_light); ?>;
                 --ecp-output-field-color: var(--ecp-primary-color);
-                /* Behält Primärfarbe für Output-Text */
                 --ecp-output-field-border: var(--ecp-primary-color);
-                /* Behält Primärfarbe für Output-Rand */
-                --ecp-field-group-bg: #f8f9fa;
-                /* Standard für helle Feldgruppen */
-                --ecp-field-group-hover-bg: #e9ecef;
+                --ecp-field-group-bg: <?php echo esc_attr($field_group_bg_light); ?>;
+                --ecp-field-group-hover-bg: <?php echo esc_attr($field_group_hover_bg_light); ?>;
                 --ecp-copy-icon-color: var(--ecp-primary-color);
-                --ecp-copy-icon-feedback-color: #28a745;
-                /* Globale Breite für Kalkulatoren, die von der CSS-Datei verwendet werden kann */
+                --ecp-copy-icon-feedback-color: <?php echo esc_attr($copy_icon_feedback_color_light); ?>;
+                
+                /* Globale Breite für Kalkulatoren */
                 --ecp-calculator-global-max-width: <?php echo ($calculator_width_option === 'full') ? '100%' : esc_attr(str_replace('px', '', $calculator_width_option)) . 'px'; ?>;
                 --ecp-calculator-global-margin-top: 30px;
                 --ecp-calculator-global-margin-bottom: 30px;
             }
 
             .ecp-calculator {
-                /* Stellt sicher, dass die Breite hier angewendet wird, falls nicht in frontend.css */
-                <?php echo $width_css; ?>margin-top: var(--ecp-calculator-global-margin-top);
+                <?php echo $width_css; ?>
+                margin-top: var(--ecp-calculator-global-margin-top);
                 margin-bottom: var(--ecp-calculator-global-margin-bottom);
             }
 
@@ -203,18 +215,16 @@ class ECP_Frontend
             }
 
             @keyframes ecpGradientShift {
-
-                0%,
-                100% {
+                0%, 100% {
                     background-position: 0% 50%;
                 }
-
                 50% {
                     background-position: 100% 50%;
                 }
             }
 
-            <?php if ($enable_system_dark_mode) : ?>@media (prefers-color-scheme: dark) {
+            <?php if ($enable_system_dark_mode) : ?>
+            @media (prefers-color-scheme: dark) {
                 :root {
                     --ecp-background-color: <?php echo esc_attr($background_color_dark); ?>;
                     --ecp-text-color: <?php echo esc_attr($text_color_dark); ?>;
@@ -222,49 +232,18 @@ class ECP_Frontend
                     --ecp-border-color: <?php echo esc_attr($border_color_dark); ?>;
                     --ecp-input-bg: <?php echo esc_attr($input_bg_dark); ?>;
                     --ecp-input-border: <?php echo esc_attr($input_border_dark); ?>;
-                    /* Fokusfarbe könnte auch im Darkmode angepasst werden, falls gewünscht */
-                    /* --ecp-input-focus-border: var(--ecp-secondary-color); */
                     --ecp-output-group-bg: <?php echo esc_attr($output_group_bg_dark); ?>;
                     --ecp-output-group-border: <?php echo esc_attr($output_group_border_dark); ?>;
                     --ecp-output-field-bg: <?php echo esc_attr($output_field_bg_dark); ?>;
-                    /* Output Text und Rand könnten auch spezifische Darkmode-Farben bekommen */
                     --ecp-output-field-color: var(--ecp-secondary-color);
-                    /* Heller für Kontrast */
                     --ecp-output-field-border: var(--ecp-secondary-color);
-                    --ecp-field-group-bg: #2d2d2d;
-                    --ecp-field-group-hover-bg: #353535;
+                    --ecp-field-group-bg: <?php echo esc_attr($field_group_bg_dark); ?>;
+                    --ecp-field-group-hover-bg: <?php echo esc_attr($field_group_hover_bg_dark); ?>;
                     --ecp-copy-icon-color: var(--ecp-secondary-color);
-                    --ecp-copy-icon-feedback-color: #34d399;
-                    /* Helleres Grün */
+                    --ecp-copy-icon-feedback-color: <?php echo esc_attr($copy_icon_feedback_color_dark); ?>;
                 }
             }
-
             <?php endif; ?>
         </style>
 <?php
     }
-
-    public function ajax_calculate()
-    {
-        check_ajax_referer('ecp_frontend_nonce', 'nonce');
-
-        $calculator_id = isset($_POST['calculator_id']) ? intval($_POST['calculator_id']) : 0;
-        $values = isset($_POST['values']) && is_array($_POST['values']) ? $_POST['values'] : array();
-
-        $sanitized_values = array();
-        foreach ($values as $key => $value) {
-            $sanitized_values[sanitize_key($key)] = is_numeric($value) ? floatval($value) : 0;
-        }
-
-        $calculator = $this->get_database()->get_calculator($calculator_id);
-
-        if (!$calculator) {
-            wp_send_json_error(__('Kalkulator nicht gefunden', 'excel-calculator-pro'));
-            return;
-        }
-
-        // Da die Berechnung primär im Frontend stattfindet, gibt dieser Endpunkt
-        // momentan nur eine Bestätigung oder könnte für andere Zwecke verwendet werden.
-        wp_send_json_success(array('message' => 'Anfrage erhalten.', 'sanitized_values' => $sanitized_values));
-    }
-}

@@ -100,7 +100,7 @@ class ECP_Admin
     }
 
     /**
-     * Admin-Initialisierung
+     * Admin-Initialisierung - Erweiterte Farbfelder
      */
     public function admin_init()
     {
@@ -124,7 +124,23 @@ class ECP_Admin
             'ecp_settings'
         );
 
-        // Einstellungsfelder
+        // Light Mode Farbsektion
+        add_settings_section(
+            'ecp_color_light_section',
+            __('Light Mode Farben', 'excel-calculator-pro'),
+            array($this, 'color_light_section_callback'),
+            'ecp_settings'
+        );
+
+        // Dark Mode Farbsektion
+        add_settings_section(
+            'ecp_color_dark_section',
+            __('Dark Mode Farben', 'excel-calculator-pro'),
+            array($this, 'color_dark_section_callback'),
+            'ecp_settings'
+        );
+
+        // Allgemeine Einstellungsfelder
         add_settings_field(
             'default_currency',
             __('Standard-Währung', 'excel-calculator-pro'),
@@ -141,6 +157,7 @@ class ECP_Admin
             'ecp_general_section'
         );
 
+        // Basis-Farbfelder
         add_settings_field(
             'primary_color',
             __('Primärfarbe', 'excel-calculator-pro'),
@@ -158,19 +175,11 @@ class ECP_Admin
         );
 
         add_settings_field(
-            'background_color',
-            __('Hintergrundfarbe', 'excel-calculator-pro'),
-            array($this, 'background_color_field_callback'),
+            'enable_system_dark_mode',
+            __('System-Dark-Mode folgen', 'excel-calculator-pro'),
+            array($this, 'system_dark_mode_field_callback'),
             'ecp_settings',
             'ecp_color_section'
-        );
-
-        add_settings_field(
-            'enable_system_dark_mode', // ID des Feldes
-            __('System-Dark-Mode folgen', 'excel-calculator-pro'), // Titel des Feldes
-            array($this, 'system_dark_mode_field_callback'), // Callback-Funktion für die Ausgabe
-            'ecp_settings', // Seite, auf der das Feld angezeigt wird
-            'ecp_color_section' // Sektion, zu der das Feld gehört
         );
 
         add_settings_field(
@@ -180,7 +189,218 @@ class ECP_Admin
             'ecp_settings',
             'ecp_color_section'
         );
+
+        // Light Mode Farben
+        add_settings_field(
+            'background_color_light',
+            __('Hintergrundfarbe', 'excel-calculator-pro'),
+            array($this, 'background_color_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'text_color_light',
+            __('Textfarbe', 'excel-calculator-pro'),
+            array($this, 'text_color_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'text_light_light',
+            __('Helle Textfarbe (Beschreibungen)', 'excel-calculator-pro'),
+            array($this, 'text_light_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'border_color_light',
+            __('Rahmenfarbe', 'excel-calculator-pro'),
+            array($this, 'border_color_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'input_bg_light',
+            __('Eingabefeld Hintergrund', 'excel-calculator-pro'),
+            array($this, 'input_bg_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'input_border_light',
+            __('Eingabefeld Rahmen', 'excel-calculator-pro'),
+            array($this, 'input_border_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'field_group_bg_light',
+            __('Feldgruppen Hintergrund', 'excel-calculator-pro'),
+            array($this, 'field_group_bg_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'field_group_hover_bg_light',
+            __('Feldgruppen Hover Hintergrund', 'excel-calculator-pro'),
+            array($this, 'field_group_hover_bg_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'output_group_bg_gradient_start_light',
+            __('Ausgabegruppen Gradient Start', 'excel-calculator-pro'),
+            array($this, 'output_group_bg_gradient_start_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'output_group_bg_gradient_end_light',
+            __('Ausgabegruppen Gradient Ende', 'excel-calculator-pro'),
+            array($this, 'output_group_bg_gradient_end_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'output_group_border_light',
+            __('Ausgabegruppen Rahmen', 'excel-calculator-pro'),
+            array($this, 'output_group_border_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'output_field_bg_light',
+            __('Ausgabefeld Hintergrund', 'excel-calculator-pro'),
+            array($this, 'output_field_bg_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        add_settings_field(
+            'copy_icon_feedback_color_light',
+            __('Kopieren-Feedback Farbe', 'excel-calculator-pro'),
+            array($this, 'copy_icon_feedback_color_light_field_callback'),
+            'ecp_settings',
+            'ecp_color_light_section'
+        );
+
+        // Dark Mode Farben
+        add_settings_field(
+            'background_color_dark',
+            __('Hintergrundfarbe', 'excel-calculator-pro'),
+            array($this, 'background_color_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'text_color_dark',
+            __('Textfarbe', 'excel-calculator-pro'),
+            array($this, 'text_color_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'text_light_dark',
+            __('Helle Textfarbe (Beschreibungen)', 'excel-calculator-pro'),
+            array($this, 'text_light_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'border_color_dark',
+            __('Rahmenfarbe', 'excel-calculator-pro'),
+            array($this, 'border_color_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'input_bg_dark',
+            __('Eingabefeld Hintergrund', 'excel-calculator-pro'),
+            array($this, 'input_bg_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'input_border_dark',
+            __('Eingabefeld Rahmen', 'excel-calculator-pro'),
+            array($this, 'input_border_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'field_group_bg_dark',
+            __('Feldgruppen Hintergrund', 'excel-calculator-pro'),
+            array($this, 'field_group_bg_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'field_group_hover_bg_dark',
+            __('Feldgruppen Hover Hintergrund', 'excel-calculator-pro'),
+            array($this, 'field_group_hover_bg_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'output_group_bg_gradient_start_dark',
+            __('Ausgabegruppen Gradient Start', 'excel-calculator-pro'),
+            array($this, 'output_group_bg_gradient_start_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'output_group_bg_gradient_end_dark',
+            __('Ausgabegruppen Gradient Ende', 'excel-calculator-pro'),
+            array($this, 'output_group_bg_gradient_end_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'output_group_border_dark',
+            __('Ausgabegruppen Rahmen', 'excel-calculator-pro'),
+            array($this, 'output_group_border_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'output_field_bg_dark',
+            __('Ausgabefeld Hintergrund', 'excel-calculator-pro'),
+            array($this, 'output_field_bg_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
+
+        add_settings_field(
+            'copy_icon_feedback_color_dark',
+            __('Kopieren-Feedback Farbe', 'excel-calculator-pro'),
+            array($this, 'copy_icon_feedback_color_dark_field_callback'),
+            'ecp_settings',
+            'ecp_color_dark_section'
+        );
     }
+
 
     /**
      * Admin-Seite anzeigen
@@ -767,17 +987,280 @@ class ECP_Admin
         echo '</select>';
         echo '<p class="description">' . __('Standard-Breite für neue Kalkulatoren', 'excel-calculator-pro') . '</p>';
     }
-   
+
     /**
-     * Callback für System-Dark-Mode-Einstellung - NEU
+     * Callback für Light Mode Sektion
      */
+    public function color_light_section_callback()
+    {
+        echo '<p>' . __('Farben für den hellen Modus. Diese werden verwendet, wenn das System-Dark-Mode deaktiviert ist oder wenn der Nutzer ein helles Design verwendet.', 'excel-calculator-pro') . '</p>';
+    }
+
+    /**
+     * Callback für Dark Mode Sektion
+     */
+    public function color_dark_section_callback()
+    {
+        echo '<p>' . __('Farben für den dunklen Modus. Diese werden nur verwendet, wenn das System-Dark-Mode aktiviert ist und der Nutzer ein dunkles Design verwendet.', 'excel-calculator-pro') . '</p>';
+    }
+
+    // Light Mode Farb-Callbacks
+    public function background_color_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['background_color_light']) ? $options['background_color_light'] : '#ffffff';
+        echo '<input type="color" name="ecp_color_settings[background_color_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Haupthintergrundfarbe des Kalkulators', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function text_color_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['text_color_light']) ? $options['text_color_light'] : '#2c3e50';
+        echo '<input type="color" name="ecp_color_settings[text_color_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Haupttextfarbe für Titel und Labels', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function text_light_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['text_light_light']) ? $options['text_light_light'] : '#6c757d';
+        echo '<input type="color" name="ecp_color_settings[text_light_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hellere Textfarbe für Beschreibungen und Hilfstexte', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function border_color_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['border_color_light']) ? $options['border_color_light'] : '#e1e5e9';
+        echo '<input type="color" name="ecp_color_settings[border_color_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Allgemeine Rahmenfarbe', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function input_bg_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['input_bg_light']) ? $options['input_bg_light'] : '#ffffff';
+        echo '<input type="color" name="ecp_color_settings[input_bg_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Eingabefelder', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function input_border_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['input_border_light']) ? $options['input_border_light'] : '#dee2e6';
+        echo '<input type="color" name="ecp_color_settings[input_border_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Rahmenfarbe der Eingabefelder', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function field_group_bg_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['field_group_bg_light']) ? $options['field_group_bg_light'] : '#f8f9fa';
+        echo '<input type="color" name="ecp_color_settings[field_group_bg_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Feldgruppen', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function field_group_hover_bg_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['field_group_hover_bg_light']) ? $options['field_group_hover_bg_light'] : '#e9ecef';
+        echo '<input type="color" name="ecp_color_settings[field_group_hover_bg_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Feldgruppen bei Hover', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_group_bg_gradient_start_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_group_bg_gradient_start_light']) ? $options['output_group_bg_gradient_start_light'] : '#e8f4f8';
+        echo '<input type="color" name="ecp_color_settings[output_group_bg_gradient_start_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Startfarbe für den Hintergrund-Verlauf der Ausgabegruppen', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_group_bg_gradient_end_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_group_bg_gradient_end_light']) ? $options['output_group_bg_gradient_end_light'] : '#f0f9ff';
+        echo '<input type="color" name="ecp_color_settings[output_group_bg_gradient_end_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Endfarbe für den Hintergrund-Verlauf der Ausgabegruppen', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_group_border_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_group_border_light']) ? $options['output_group_border_light'] : '#b3d9e6';
+        echo '<input type="color" name="ecp_color_settings[output_group_border_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Rahmenfarbe der Ausgabegruppen', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_field_bg_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_field_bg_light']) ? $options['output_field_bg_light'] : '#ffffff';
+        echo '<input type="color" name="ecp_color_settings[output_field_bg_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Ausgabefelder', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function copy_icon_feedback_color_light_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['copy_icon_feedback_color_light']) ? $options['copy_icon_feedback_color_light'] : '#28a745';
+        echo '<input type="color" name="ecp_color_settings[copy_icon_feedback_color_light]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Farbe für das Kopieren-Feedback (Erfolgsmeldung)', 'excel-calculator-pro') . '</p>';
+    }
+
+    // Dark Mode Farb-Callbacks
+    public function background_color_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['background_color_dark']) ? $options['background_color_dark'] : '#1e1e1e';
+        echo '<input type="color" name="ecp_color_settings[background_color_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Haupthintergrundfarbe des Kalkulators im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function text_color_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['text_color_dark']) ? $options['text_color_dark'] : '#e0e0e0';
+        echo '<input type="color" name="ecp_color_settings[text_color_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Haupttextfarbe für Titel und Labels im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function text_light_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['text_light_dark']) ? $options['text_light_dark'] : '#adb5bd';
+        echo '<input type="color" name="ecp_color_settings[text_light_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hellere Textfarbe für Beschreibungen im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function border_color_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['border_color_dark']) ? $options['border_color_dark'] : '#404040';
+        echo '<input type="color" name="ecp_color_settings[border_color_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Allgemeine Rahmenfarbe im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function input_bg_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['input_bg_dark']) ? $options['input_bg_dark'] : '#2d2d2d';
+        echo '<input type="color" name="ecp_color_settings[input_bg_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Eingabefelder im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function input_border_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['input_border_dark']) ? $options['input_border_dark'] : '#505050';
+        echo '<input type="color" name="ecp_color_settings[input_border_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Rahmenfarbe der Eingabefelder im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function field_group_bg_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['field_group_bg_dark']) ? $options['field_group_bg_dark'] : '#2d2d2d';
+        echo '<input type="color" name="ecp_color_settings[field_group_bg_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Feldgruppen im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function field_group_hover_bg_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['field_group_hover_bg_dark']) ? $options['field_group_hover_bg_dark'] : '#353535';
+        echo '<input type="color" name="ecp_color_settings[field_group_hover_bg_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Feldgruppen bei Hover im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_group_bg_gradient_start_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_group_bg_gradient_start_dark']) ? $options['output_group_bg_gradient_start_dark'] : '#1a3a4a';
+        echo '<input type="color" name="ecp_color_settings[output_group_bg_gradient_start_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Startfarbe für den Hintergrund-Verlauf der Ausgabegruppen im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_group_bg_gradient_end_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_group_bg_gradient_end_dark']) ? $options['output_group_bg_gradient_end_dark'] : '#0f2f3f';
+        echo '<input type="color" name="ecp_color_settings[output_group_bg_gradient_end_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Endfarbe für den Hintergrund-Verlauf der Ausgabegruppen im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_group_border_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_group_border_dark']) ? $options['output_group_border_dark'] : '#4a6c7a';
+        echo '<input type="color" name="ecp_color_settings[output_group_border_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Rahmenfarbe der Ausgabegruppen im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function output_field_bg_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['output_field_bg_dark']) ? $options['output_field_bg_dark'] : '#2d2d2d';
+        echo '<input type="color" name="ecp_color_settings[output_field_bg_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hintergrundfarbe der Ausgabefelder im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function copy_icon_feedback_color_dark_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['copy_icon_feedback_color_dark']) ? $options['copy_icon_feedback_color_dark'] : '#34d399';
+        echo '<input type="color" name="ecp_color_settings[copy_icon_feedback_color_dark]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Farbe für das Kopieren-Feedback im dunklen Modus', 'excel-calculator-pro') . '</p>';
+    }
+
+    /**
+     * Bestehende Callbacks - unverändert beibehalten
+     */
+    public function primary_color_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['primary_color']) ? $options['primary_color'] : '#007cba';
+
+        echo '<input type="color" name="ecp_color_settings[primary_color]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Hauptfarbe für Buttons, Rahmen und Akzente', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function secondary_color_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $color = isset($options['secondary_color']) ? $options['secondary_color'] : '#00a0d2';
+
+        echo '<input type="color" name="ecp_color_settings[secondary_color]" value="' . esc_attr($color) . '" />';
+        echo '<p class="description">' . __('Sekundäre Akzentfarbe für Verläufe und Hover-Effekte', 'excel-calculator-pro') . '</p>';
+    }
+
+    public function calculator_width_field_callback()
+    {
+        $options = get_option('ecp_color_settings', array());
+        $width = isset($options['calculator_width']) ? $options['calculator_width'] : 'full';
+
+        echo '<select name="ecp_color_settings[calculator_width]">';
+        $widths = array(
+            'full' => __('Volle Breite (100%)', 'excel-calculator-pro'),
+            'contained' => __('Begrenzt (700px)', 'excel-calculator-pro'),
+            'large' => __('Gross (900px)', 'excel-calculator-pro'),
+            'medium' => __('Mittel (600px)', 'excel-calculator-pro')
+        );
+
+        foreach ($widths as $value => $label) {
+            echo '<option value="' . esc_attr($value) . '"' . selected($width, $value, false) . '>' . esc_html($label) . '</option>';
+        }
+        echo '</select>';
+        echo '<p class="description">' . __('Standard-Breite für neue Kalkulatoren', 'excel-calculator-pro') . '</p>';
+    }
+
     public function system_dark_mode_field_callback()
     {
         $options = get_option('ecp_color_settings', array());
-        // Standardmäßig ist die Option deaktiviert, falls sie noch nicht gespeichert wurde.
         $checked = isset($options['enable_system_dark_mode']) ? checked($options['enable_system_dark_mode'], 1, false) : '';
 
-        echo '<label for="ecp_enable_system_dark_mode">'; // ID für Label angepasst
+        echo '<label for="ecp_enable_system_dark_mode">';
         echo '<input type="checkbox" id="ecp_enable_system_dark_mode" name="ecp_color_settings[enable_system_dark_mode]" value="1" ' . $checked . ' />';
         echo ' ' . __('Frontend-Kalkulatoren an das helle/dunkle Design des Betriebssystems anpassen', 'excel-calculator-pro');
         echo '</label>';
