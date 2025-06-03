@@ -954,16 +954,20 @@ class ECP_Admin
     }
 
     /**
-     * Hintergrundfarbe Callback
+     * System Dark Mode Callback
      */
-    public function background_color_field_callback()
+    public function system_dark_mode_field_callback()
     {
         $options = get_option('ecp_color_settings', array());
-        $color = isset($options['background_color']) ? $options['background_color'] : '#ffffff';
+        $checked = isset($options['enable_system_dark_mode']) ? checked($options['enable_system_dark_mode'], 1, false) : '';
 
-        echo '<input type="color" name="ecp_color_settings[background_color]" value="' . esc_attr($color) . '" />';
-        echo '<p class="description">' . __('Hintergrundfarbe der Kalkulatoren', 'excel-calculator-pro') . '</p>';
+        echo '<label for="ecp_enable_system_dark_mode">';
+        echo '<input type="checkbox" id="ecp_enable_system_dark_mode" name="ecp_color_settings[enable_system_dark_mode]" value="1" ' . $checked . ' />';
+        echo ' ' . __('Frontend-Kalkulatoren an das helle/dunkle Design des Betriebssystems anpassen', 'excel-calculator-pro');
+        echo '</label>';
+        echo '<p class="description">' . __('Wenn aktiviert, versucht das Plugin, das Farbschema des Nutzer-Betriebssystems (Hell/Dunkel) zu übernehmen. Deaktivieren Sie diese Option, wenn der automatische Dark-Mode nicht zu Ihrem Webseiten-Layout passt.', 'excel-calculator-pro') . '</p>';
     }
+
 
     /**
      * Kalkulator-Breite Callback
@@ -1212,58 +1216,5 @@ class ECP_Admin
         $color = isset($options['copy_icon_feedback_color_dark']) ? $options['copy_icon_feedback_color_dark'] : '#34d399';
         echo '<input type="color" name="ecp_color_settings[copy_icon_feedback_color_dark]" value="' . esc_attr($color) . '" />';
         echo '<p class="description">' . __('Farbe für das Kopieren-Feedback im dunklen Modus', 'excel-calculator-pro') . '</p>';
-    }
-
-    /**
-     * Bestehende Callbacks - unverändert beibehalten
-     */
-    public function primary_color_field_callback()
-    {
-        $options = get_option('ecp_color_settings', array());
-        $color = isset($options['primary_color']) ? $options['primary_color'] : '#007cba';
-
-        echo '<input type="color" name="ecp_color_settings[primary_color]" value="' . esc_attr($color) . '" />';
-        echo '<p class="description">' . __('Hauptfarbe für Buttons, Rahmen und Akzente', 'excel-calculator-pro') . '</p>';
-    }
-
-    public function secondary_color_field_callback()
-    {
-        $options = get_option('ecp_color_settings', array());
-        $color = isset($options['secondary_color']) ? $options['secondary_color'] : '#00a0d2';
-
-        echo '<input type="color" name="ecp_color_settings[secondary_color]" value="' . esc_attr($color) . '" />';
-        echo '<p class="description">' . __('Sekundäre Akzentfarbe für Verläufe und Hover-Effekte', 'excel-calculator-pro') . '</p>';
-    }
-
-    public function calculator_width_field_callback()
-    {
-        $options = get_option('ecp_color_settings', array());
-        $width = isset($options['calculator_width']) ? $options['calculator_width'] : 'full';
-
-        echo '<select name="ecp_color_settings[calculator_width]">';
-        $widths = array(
-            'full' => __('Volle Breite (100%)', 'excel-calculator-pro'),
-            'contained' => __('Begrenzt (700px)', 'excel-calculator-pro'),
-            'large' => __('Gross (900px)', 'excel-calculator-pro'),
-            'medium' => __('Mittel (600px)', 'excel-calculator-pro')
-        );
-
-        foreach ($widths as $value => $label) {
-            echo '<option value="' . esc_attr($value) . '"' . selected($width, $value, false) . '>' . esc_html($label) . '</option>';
-        }
-        echo '</select>';
-        echo '<p class="description">' . __('Standard-Breite für neue Kalkulatoren', 'excel-calculator-pro') . '</p>';
-    }
-
-    public function system_dark_mode_field_callback()
-    {
-        $options = get_option('ecp_color_settings', array());
-        $checked = isset($options['enable_system_dark_mode']) ? checked($options['enable_system_dark_mode'], 1, false) : '';
-
-        echo '<label for="ecp_enable_system_dark_mode">';
-        echo '<input type="checkbox" id="ecp_enable_system_dark_mode" name="ecp_color_settings[enable_system_dark_mode]" value="1" ' . $checked . ' />';
-        echo ' ' . __('Frontend-Kalkulatoren an das helle/dunkle Design des Betriebssystems anpassen', 'excel-calculator-pro');
-        echo '</label>';
-        echo '<p class="description">' . __('Wenn aktiviert, versucht das Plugin, das Farbschema des Nutzer-Betriebssystems (Hell/Dunkel) zu übernehmen. Deaktivieren Sie diese Option, wenn der automatische Dark-Mode nicht zu Ihrem Webseiten-Layout passt.', 'excel-calculator-pro') . '</p>';
     }
 }
