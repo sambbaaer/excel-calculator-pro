@@ -1,83 +1,79 @@
 /* Excel Calculator Pro - Frontend Styles */
 
 /* ==========================================================================
-   CSS Reset für Plugin-Isolation
+   CSS Reset für Plugin-Isolation (optional, aber empfohlen)
    ========================================================================== */
-
+.ecp-calculator,
 .ecp-calculator * {
     box-sizing: border-box;
 }
 
 /* ==========================================================================
-   Hauptcontainer
-   ========================================================================== */
-
+      Hauptcontainer
+      ========================================================================== */
 .ecp-calculator {
-    max-width: 100%;
-    width: 100%;
-    margin: 30px 0;
+    /* Breite und margin werden jetzt über CSS-Variablen aus PHP gesteuert, falls gesetzt */
+    /* max-width: var(--ecp-calculator-global-max-width, 100%); */
+    /* Fallback, falls Variable nicht da */
+    /* margin-top: var(--ecp-calculator-global-margin-top, 30px); */
+    /* margin-bottom: var(--ecp-calculator-global-margin-bottom, 30px); */
+    /* margin-left: auto; */
+    /* Für Zentrierung, wenn max-width gesetzt ist */
+    /* margin-right: auto; */
+    /* Für Zentrierung, wenn max-width gesetzt ist */
+
     padding: 30px;
-    border: 1px solid #e1e5e9;
+    border: 1px solid var(--ecp-border-color);
     border-radius: 12px;
-    background: #ffffff;
+    background: var(--ecp-background-color);
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
     line-height: 1.6;
-    color: #2c3e50;
+    color: var(--ecp-text-color);
     position: relative;
     overflow: hidden;
+    transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
+    /* Übergänge für Farbwechsel */
 }
 
-.ecp-calculator::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 4px;
-    background: linear-gradient(90deg, #007cba 0%, #00a0d2 50%, #007cba 100%);
-    background-size: 200% 100%;
-    animation: ecpGradientShift 3s ease-in-out infinite;
-}
-
-@keyframes ecpGradientShift {
-    0%, 100% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-}
+/* Der ::before Gradient wird direkt in PHP mit den Variablen gesetzt und benötigt hier keine Anpassung */
 
 /* ==========================================================================
-   Header-Bereich
-   ========================================================================== */
-
+      Header-Bereich
+      ========================================================================== */
 .ecp-calculator-header {
     margin-bottom: 30px;
     text-align: center;
     padding-bottom: 20px;
-    border-bottom: 2px solid #f8f9fa;
-    position: relative;
+    border-bottom: 2px solid var(--ecp-border-color);
+    /* Verwende Variable */
+    transition: border-color 0.3s ease;
 }
 
 .ecp-calculator-title {
     font-size: 28px;
     font-weight: 700;
-    color: #1a202c;
+    color: var(--ecp-text-color);
+    /* Verwende Variable */
     margin: 0 0 12px 0;
     letter-spacing: -0.5px;
     position: relative;
+    transition: color 0.3s ease;
 }
 
 .ecp-calculator-description {
-    color: #6c757d;
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
     font-size: 16px;
     margin: 0;
     font-weight: 400;
     line-height: 1.5;
+    transition: color 0.3s ease;
 }
 
 /* ==========================================================================
-   Sektionen
-   ========================================================================== */
-
+      Sektionen
+      ========================================================================== */
 .ecp-section {
     margin-bottom: 35px;
     animation: ecpSlideInUp 0.6s ease-out;
@@ -92,6 +88,7 @@
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -101,36 +98,41 @@
 .ecp-section-title {
     font-size: 20px;
     font-weight: 600;
-    color: #1a202c;
+    color: var(--ecp-text-color);
+    /* Verwende Variable */
     margin: 0 0 20px 0;
     padding-bottom: 10px;
-    border-bottom: 2px solid #e9ecef;
+    border-bottom: 2px solid var(--ecp-border-color);
+    /* Verwende Variable */
     position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
+    transition: color 0.3s ease, border-color 0.3s ease;
 }
 
 .ecp-section-title::before {
+    /* Gradient wird in PHP gesetzt, hier nur Basis-Styling */
     content: '';
     width: 4px;
     height: 20px;
-    background: linear-gradient(135deg, #007cba, #00a0d2);
+    background: linear-gradient(135deg, var(--ecp-primary-color), var(--ecp-secondary-color));
     border-radius: 2px;
 }
 
 /* ==========================================================================
-   Eingabefelder
-   ========================================================================== */
-
+      Eingabefelder
+      ========================================================================== */
 .ecp-field-group {
     margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 20px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-    border: 1px solid #e9ecef;
+    background: var(--ecp-field-group-bg);
+    /* Verwende Variable */
+    border: 1px solid var(--ecp-border-color);
+    /* Verwende Variable */
     border-radius: 10px;
     transition: all 0.3s ease;
     position: relative;
@@ -144,16 +146,18 @@
     left: 0;
     width: 4px;
     height: 100%;
-    background: linear-gradient(135deg, #007cba, #00a0d2);
+    background: linear-gradient(135deg, var(--ecp-primary-color), var(--ecp-secondary-color));
     transform: scaleY(0);
     transition: transform 0.3s ease;
 }
 
 .ecp-field-group:hover {
-    background: linear-gradient(135deg, #e9ecef 0%, #f8f9fa 100%);
-    border-color: #007cba;
+    background: var(--ecp-field-group-hover-bg);
+    /* Verwende Variable */
+    border-color: var(--ecp-primary-color);
     transform: translateY(-2px);
     box-shadow: 0 6px 20px rgba(0, 124, 186, 0.15);
+    /* Schatten könnte auch variabel sein */
 }
 
 .ecp-field-group:hover::before {
@@ -162,7 +166,8 @@
 
 .ecp-field-group label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--ecp-text-color);
+    /* Verwende Variable */
     margin-right: 20px;
     min-width: 200px;
     text-align: left;
@@ -170,9 +175,11 @@
     display: flex;
     align-items: center;
     gap: 8px;
+    transition: color 0.3s ease;
 }
 
 .ecp-required {
+    /* Bleibt für den Fall, dass es doch genutzt wird */
     color: #dc3545;
     font-weight: bold;
     font-size: 14px;
@@ -181,169 +188,104 @@
 .ecp-input-wrapper {
     display: flex;
     align-items: center;
-    /* Stellt sicher, dass Hilfetext, Input und Einheit auf einer Linie sind */
     gap: 8px;
-    /* Behält den Abstand zwischen Elementen im Wrapper bei */
     flex-grow: 1;
-    /* Erlaubt dem Wrapper, den verfügbaren Platz einzunehmen */
 }
 
 .ecp-field-help-prefix {
     font-size: 0.85em;
-    /* Etwas kleiner als der Label-Text */
-    color: var(--ecp-text-light, #6c757d);
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
     margin-right: 8px;
-    /* Abstand zum Eingabefeld */
     font-style: italic;
     white-space: nowrap;
-    /* Verhindert Umbruch, falls der Text kurz ist */
-    /* flex-shrink: 0; /* Verhindert, dass der Hilfetext schrumpft, falls nicht genug Platz ist */
-}
-
-/* Anpassung für das Label, um mehr Platz für den Input-Wrapper zu lassen, falls nötig */
-.ecp-field-group label {
-    /* min-width: 150px; /* Ggf. anpassen oder flex-shrink: 0; setzen */
-    /* flex-grow: 0; */
-    /* Verhindert, dass das Label unnötig viel Platz einnimmt */
-}
-
-
-/* Kopier-Icon für Ausgabefelder */
-.ecp-output-wrapper {
-    position: relative;
-    /* Für absolute Positionierung, falls erwünscht, oder einfach flex lassen */
-    display: flex;
-    /* Stellt sicher, dass Output-Feld und Icon nebeneinander liegen */
-    align-items: center;
-}
-
-.ecp-copy-icon {
-    cursor: pointer;
-    margin-left: 10px;
-    /* Abstand zum Output-Feld/Einheit */
-    font-size: 1em;
-    /* Passende Grösse zum Text */
-    color: var(--ecp-primary-color, #007cba);
-    opacity: 0;
-    /* Standardmässig unsichtbar */
-    visibility: hidden;
-    /* Standardmässig nicht interaktiv */
-    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out, color 0.2s ease-in-out;
-    user-select: none;
-    /* Verhindert Textauswahl des Icons */
-}
-
-.ecp-output-group:hover .ecp-copy-icon {
-    /* Icon beim Hover über die gesamte Gruppe anzeigen */
-    opacity: 0.7;
-    visibility: visible;
-}
-
-.ecp-copy-icon:hover {
-    opacity: 1;
-    transform: scale(1.15);
-    /* Leichte Vergrösserung beim Hover über das Icon selbst */
-}
-
-.ecp-copy-icon.ecp-copied-feedback {
-    /* Klasse für visuelles Feedback nach dem Kopieren */
-    color: #28a745;
-    /* Erfolgsfarbe (Grün) */
-    opacity: 1;
-    transform: scale(1.1);
-}
-
-.ecp-copy-icon.ecp-copied-feedback:hover {
-    transform: scale(1.1);
-    /* Behält den Scale-Effekt während des Feedbacks bei */
-}
-
-/* Anpassung für Responsivität des Hilfetextes und Kopier-Icons falls nötig */
-@media (max-width: 768px) {
-    .ecp-field-help-prefix {
-        /* Ggf. white-space: normal; und margin-bottom: 5px; wenn es unter das Label soll */
-        /* oder display: block; margin-right: 0; margin-bottom: 5px; */
-    }
-
-    .ecp-output-group:hover .ecp-copy-icon,
-    .ecp-output-wrapper:hover .ecp-copy-icon {
-        /* Auf Touch-Geräten ist Hover schwierig, ggf. immer sichtbar machen oder andere Logik */
-        opacity: 0.7;
-        /* Leicht sichtbar machen, wenn man nicht hovern kann, oder ganz */
-        visibility: visible;
-    }
-}
-
-/* Entferne den Stern für Pflichtfelder, falls er noch irgendwo im CSS gestyled wurde */
-.ecp-required {
-    display: none !important;
+    transition: color 0.3s ease;
 }
 
 .ecp-input-field {
     padding: 14px 18px;
-    border: 2px solid #dee2e6;
+    border: 2px solid var(--ecp-input-border);
+    /* Verwende Variable */
     border-radius: 8px;
     width: 240px;
     font-size: 16px;
     font-weight: 500;
     transition: all 0.3s ease;
-    background: white;
+    background: var(--ecp-input-bg);
+    /* Verwende Variable */
+    color: var(--ecp-text-color);
+    /* Verwende Variable für Text im Input */
     outline: none;
     position: relative;
     z-index: 1;
 }
 
 .ecp-input-field:focus {
-    border-color: #007cba;
+    border-color: var(--ecp-input-focus-border);
+    /* Verwende Variable */
     box-shadow: 0 0 0 4px rgba(0, 124, 186, 0.1);
+    /* Schatten anpassen oder variabel machen */
     transform: scale(1.02);
 }
 
 .ecp-input-field:invalid {
     border-color: #dc3545;
+    /* Fehlerfarbe bleibt oft gleich */
     box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
 }
 
 .ecp-input-field::placeholder {
-    color: #adb5bd;
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
     font-style: italic;
+    opacity: 0.7;
 }
 
 .ecp-input-unit {
-    color: #6c757d;
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
     font-weight: 600;
     font-size: 14px;
     white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
 .ecp-field-help {
+    /* Dies ist der Text UNTER dem Feld, nicht der Prefix */
     font-size: 12px;
-    color: #6c757d;
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
     margin-top: 6px;
     font-style: italic;
     line-height: 1.4;
+    width: 100%;
+    /* Nimmt die volle Breite unter dem Label ein */
+    transition: color 0.3s ease;
 }
 
 .ecp-error-message {
     color: #dc3545;
+    /* Fehlerfarbe */
     font-size: 12px;
     margin-top: 4px;
     font-weight: 500;
 }
 
 /* ==========================================================================
-   Ausgabefelder
-   ========================================================================== */
-
+      Ausgabefelder
+      ========================================================================== */
 .ecp-output-group {
     margin-bottom: 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: 20px;
-    background: linear-gradient(135deg, #e8f4f8 0%, #f0f9ff 100%);
-    border: 1px solid #b3d9e6;
-    border-left: 5px solid #007cba;
+    background: var(--ecp-output-group-bg);
+    /* Verwende Variable */
+    border: 1px solid var(--ecp-output-group-border);
+    /* Verwende Variable */
+    border-left: 5px solid var(--ecp-primary-color);
+    /* Akzent bleibt Primärfarbe */
     border-radius: 10px;
     transition: all 0.3s ease;
     position: relative;
@@ -351,6 +293,7 @@
 }
 
 .ecp-output-group::before {
+    /* Optionaler Hover-Effekt, kann auch variabel sein */
     content: '';
     position: absolute;
     top: 0;
@@ -368,7 +311,8 @@
 
 .ecp-output-group label {
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--ecp-text-color);
+    /* Verwende Variable */
     margin-right: 20px;
     min-width: 200px;
     text-align: left;
@@ -378,13 +322,17 @@
     gap: 8px;
     position: relative;
     z-index: 2;
+    transition: color 0.3s ease;
 }
 
 .ecp-output-help {
+    /* Info-Icon */
     cursor: help;
     font-size: 12px;
     opacity: 0.7;
     transition: opacity 0.2s ease;
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
 }
 
 .ecp-output-help:hover {
@@ -402,22 +350,27 @@
 .ecp-output-field {
     font-weight: 700;
     font-size: 20px;
-    color: #007cba;
-    background: white;
+    color: var(--ecp-output-field-color);
+    /* Verwende Variable */
+    background: var(--ecp-output-field-bg);
+    /* Verwende Variable */
     padding: 14px 20px;
     border-radius: 8px;
     min-width: 140px;
     text-align: right;
-    border: 2px solid #007cba;
+    border: 2px solid var(--ecp-output-field-border);
+    /* Verwende Variable */
     transition: all 0.3s ease;
     position: relative;
     box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
+    /* Schatten anpassen oder variabel machen */
 }
 
 .ecp-output-field.ecp-animated {
     transform: scale(1.05);
     box-shadow: 0 6px 20px rgba(0, 124, 186, 0.25);
-    background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+    /* Hintergrund für Animation könnte auch variabel sein */
+    /* background: linear-gradient(135deg, var(--ecp-output-field-bg) 0%, #f0f9ff 100%); */
 }
 
 .ecp-output-field.ecp-changed {
@@ -425,36 +378,101 @@
 }
 
 @keyframes ecpPulseGlow {
-    0% { 
+
+    /* Diese Animation könnte auch Darkmode-spezifische Farben benötigen, wenn nicht variabel */
+    0% {
         transform: scale(1);
         box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
     }
-    50% { 
+
+    50% {
         transform: scale(1.08);
         box-shadow: 0 8px 25px rgba(0, 124, 186, 0.3);
         background: linear-gradient(135deg, #e8f4f8 0%, #ffffff 100%);
     }
-    100% { 
+
+    100% {
         transform: scale(1);
         box-shadow: 0 2px 8px rgba(0, 124, 186, 0.1);
     }
 }
 
+/* Falls eine separate Darkmode-Animation benötigt wird, kann sie hier definiert und
+      im Darkmode-Block in PHP (`add_inline_styles`) referenziert werden.
+      Oder die Keyframes selbst verwenden CSS-Variablen, was komplexer ist.
+      Für jetzt wird die existierende Animation beibehalten.
+   */
+@keyframes ecpPulseGlowDark {
+
+    /* Beispiel für Darkmode-Animation, falls benötigt */
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    50% {
+        transform: scale(1.08);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+        background: linear-gradient(135deg, #30404a 0%, #20303a 100%);
+    }
+
+    100% {
+        transform: scale(1);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+}
+
+
 .ecp-output-unit {
-    color: #6c757d;
+    color: var(--ecp-text-light);
+    /* Verwende Variable */
     font-weight: 600;
     font-size: 14px;
     white-space: nowrap;
+    transition: color 0.3s ease;
 }
 
-/* ==========================================================================
-   Verschiedene Themes
-   ========================================================================== */
+.ecp-copy-icon {
+    cursor: pointer;
+    margin-left: 10px;
+    font-size: 1em;
+    color: var(--ecp-copy-icon-color);
+    /* Variable für Icon-Farbe */
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out, color 0.2s ease-in-out;
+    user-select: none;
+}
 
-/* Kompaktes Theme */
+.ecp-output-group:hover .ecp-copy-icon {
+    opacity: 0.7;
+    visibility: visible;
+}
+
+.ecp-copy-icon:hover {
+    opacity: 1;
+    transform: scale(1.15);
+}
+
+.ecp-copy-icon.ecp-copied-feedback {
+    color: var(--ecp-copy-icon-feedback-color);
+    /* Variable für Feedback-Farbe */
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.ecp-copy-icon.ecp-copied-feedback:hover {
+    transform: scale(1.1);
+}
+
+
+/* ==========================================================================
+      Verschiedene Themes (Beispiel, wie sie Variablen nutzen könnten)
+      ========================================================================== */
 .ecp-theme-compact {
     padding: 20px;
-    max-width: 500px;
+    /* max-width: 500px; */
+    /* Breite wird global gesteuert */
 }
 
 .ecp-theme-compact .ecp-field-group,
@@ -463,91 +481,67 @@
     margin-bottom: 15px;
 }
 
-.ecp-theme-compact .ecp-calculator-title {
-    font-size: 22px;
-}
+/* Weitere Theme-spezifische Anpassungen ... */
 
-.ecp-theme-compact .ecp-section-title {
-    font-size: 16px;
-}
-
-.ecp-theme-compact .ecp-input-field {
-    width: 180px;
-    padding: 10px 14px;
-    font-size: 14px;
-}
-
-.ecp-theme-compact .ecp-output-field {
-    font-size: 16px;
-    padding: 10px 16px;
-    min-width: 100px;
-}
-
-/* Modernes Theme */
 .ecp-theme-modern {
     border-radius: 20px;
-    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    /* background: linear-gradient(135deg, var(--ecp-background-color) 0%, #f8f9fa 100%); */
+    /* Beispiel: Modern könnte eigenen Hintergrund definieren */
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
 }
 
-.ecp-theme-modern .ecp-field-group,
-.ecp-theme-modern .ecp-output-group {
-    border-radius: 15px;
-    backdrop-filter: blur(10px);
-}
+/* Weitere Theme-spezifische Anpassungen ... */
 
-.ecp-theme-modern .ecp-input-field,
-.ecp-theme-modern .ecp-output-field {
-    border-radius: 12px;
-}
 
 /* ==========================================================================
-   Responsive Design
-   ========================================================================== */
-
+      Responsive Design
+      ========================================================================== */
 @media (max-width: 768px) {
     .ecp-calculator {
-        margin: 15px;
+        /* margin: 15px; */
+        /* Globale Margins werden in PHP gesetzt */
         padding: 25px 20px;
-        max-width: none;
+        /* max-width: none; */
+        /* Globale Breite wird in PHP gesetzt */
     }
-    
-    .ecp-field-group, 
+
+    .ecp-field-group,
     .ecp-output-group {
         flex-direction: column;
         align-items: flex-start;
         text-align: left;
         padding: 18px;
     }
-    
-    .ecp-field-group label, 
+
+    .ecp-field-group label,
     .ecp-output-group label {
         margin-bottom: 12px;
         margin-right: 0;
         min-width: auto;
         width: 100%;
     }
-    
+
     .ecp-input-wrapper,
     .ecp-output-wrapper {
         width: 100%;
     }
-    
+
     .ecp-input-field {
         width: 100%;
         max-width: none;
     }
-    
+
     .ecp-output-field {
         width: 100%;
         text-align: center;
+        /* Oder left, je nach Präferenz auf Mobilgeräten */
         min-width: auto;
     }
-    
+
     .ecp-calculator-title {
         font-size: 24px;
     }
-    
+
     .ecp-section-title {
         font-size: 18px;
     }
@@ -555,28 +549,28 @@
 
 @media (max-width: 480px) {
     .ecp-calculator {
-        padding: 20px 15px;
-        margin: 10px;
+        /* padding: 20px 15px; */
+        /* margin: 10px; */
     }
-    
+
     .ecp-calculator-title {
         font-size: 20px;
     }
-    
+
     .ecp-section-title {
         font-size: 16px;
     }
-    
+
     .ecp-field-group,
     .ecp-output-group {
         padding: 15px;
     }
-    
+
     .ecp-input-field {
-        font-size: 16px; /* Verhindert Zoom auf iOS */
+        font-size: 16px;
         padding: 12px 16px;
     }
-    
+
     .ecp-output-field {
         font-size: 18px;
         padding: 12px 16px;
@@ -584,158 +578,102 @@
 }
 
 /* ==========================================================================
-   Dark Mode Support
-   ========================================================================== */
+      Dark Mode Support
+      ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-    .ecp-calculator {
-        background: #1a1a1a;
-        border-color: #404040;
-        color: #e0e0e0;
-    }
-    
-    .ecp-calculator::before {
-        background: linear-gradient(90deg, #0073aa 0%, #005a87 50%, #0073aa 100%);
-    }
-    
-    .ecp-calculator-title,
-    .ecp-section-title {
-        color: #ffffff;
-    }
-    
-    .ecp-section-title {
-        border-bottom-color: #404040;
-    }
-    
-    .ecp-field-group {
-        background: linear-gradient(135deg, #2d2d2d 0%, #1a1a1a 100%);
-        border-color: #404040;
-    }
-    
-    .ecp-field-group:hover {
-        background: linear-gradient(135deg, #353535 0%, #2d2d2d 100%);
-        border-color: #0073aa;
-    }
-    
-    .ecp-input-field {
-        background: #1a1a1a;
-        border-color: #404040;
-        color: #e0e0e0;
-    }
-    
-    .ecp-input-field:focus {
-        border-color: #0073aa;
-        background: #2d2d2d;
-    }
-    
-    .ecp-output-group {
-        background: linear-gradient(135deg, #1a3a4a 0%, #0f2f3f 100%);
-        border-color: #0073aa;
-    }
-    
-    .ecp-output-field {
-        background: #1a1a1a;
-        color: #00a0d2;
-        border-color: #0073aa;
-    }
-    
-    .ecp-field-help,
-    .ecp-output-help,
-    .ecp-input-unit,
-    .ecp-output-unit {
-        color: #adb5bd;
-    }
-}
+/* ENTFERNT: Der gesamte @media (prefers-color-scheme: dark) Block wurde entfernt.
+      Die Darkmode-Umschaltung erfolgt jetzt ausschliesslich über die CSS-Variablen,
+      die von `class-ecp-frontend.php` konditional (basierend auf der Backend-Einstellung)
+      innerhalb eines `@media (prefers-color-scheme: dark)` Blocks im Inline-Style gesetzt werden.
+      Diese Datei (frontend.css) verwendet nun die definierten Variablen.
+   */
+
 
 /* ==========================================================================
-   High Contrast Mode
-   ========================================================================== */
-
+      High Contrast Mode (Beibehaltung oder Anpassung an Variablen)
+      ========================================================================== */
 @media (prefers-contrast: high) {
     .ecp-calculator {
         border: 3px solid #000;
+        /* Kontrastfarben bleiben oft absolut */
         background: #fff;
         color: #000;
     }
-    
-    .ecp-input-field,
-    .ecp-output-field {
-        border: 2px solid #000;
-        background: #fff;
-        color: #000;
-    }
-    
-    .ecp-input-field:focus {
-        outline: 3px solid #0066cc;
-        outline-offset: 2px;
-    }
-    
-    .ecp-field-group,
-    .ecp-output-group {
-        border: 2px solid #000;
-        background: #f5f5f5;
-    }
+
+    /* Weitere Kontrastanpassungen... */
 }
 
 /* ==========================================================================
-   Print Styles
-   ========================================================================== */
-
+      Print Styles (Beibehaltung, da spezifisch für Print)
+      ========================================================================== */
 @media print {
     .ecp-calculator {
-        box-shadow: none;
-        border: 2px solid #000;
-        break-inside: avoid;
+        box-shadow: none !important;
+        border: 1px solid #000 !important;
+        /* Dünnerer Rand für Print */
         background: white !important;
         color: black !important;
-        max-width: none;
-        margin: 0;
-        padding: 20px;
+        max-width: 100% !important;
+        /* Für Print volle Breite des verfügbaren Bereichs */
+        margin: 0 !important;
+        padding: 15px !important;
+        /* Weniger Padding für Print */
     }
-    
+
     .ecp-calculator::before {
-        display: none;
+        display: none !important;
     }
-    
+
     .ecp-field-group,
     .ecp-output-group {
         background: white !important;
-        border: 1px solid #000;
+        border: 1px solid #ccc !important;
+        /* Hellerer Rand für Gruppen im Print */
         break-inside: avoid;
         margin-bottom: 10px;
+        padding: 10px;
     }
-    
+
     .ecp-input-field,
     .ecp-output-field {
-        border: 1px solid #000 !important;
+        border: 1px solid #666 !important;
+        /* Deutlicherer Rand für Felder */
         background: white !important;
         color: black !important;
         box-shadow: none !important;
+        padding: 8px 10px;
     }
-    
+
     .ecp-calculator-title,
     .ecp-section-title {
         color: black !important;
+        border-bottom-color: #666 !important;
     }
-    
-    /* Verstecke interaktive Elemente */
+
+    .ecp-section-title::before {
+        display: none !important;
+    }
+
+    /* Deko-Elemente im Print ausblenden */
     .ecp-input-field::placeholder {
         display: none;
     }
+
+    .ecp-copy-icon,
+    .ecp-output-help {
+        display: none !important;
+    }
+
+    /* Interaktive Elemente ausblenden */
 }
+
 
 /* ==========================================================================
-   Accessibility Improvements
-   ========================================================================== */
+      Accessibility, Loading, Error, Success, Debug, Scrollbar
+      Diese Sektionen bleiben weitgehend unverändert, können aber auch
+      CSS-Variablen nutzen, wo es sinnvoll ist (z.B. Lade-Spinner-Farbe).
+      ========================================================================== */
 
-/* Focus-Styles für bessere Accessibility */
-.ecp-input-field:focus,
-.ecp-output-field:focus-within {
-    outline: 3px solid #0073aa;
-    outline-offset: 2px;
-}
-
-/* Screen Reader Only */
 .ecp-sr-only {
     position: absolute;
     width: 1px;
@@ -748,34 +686,29 @@
     border: 0;
 }
 
-/* Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
+
     .ecp-calculator,
     .ecp-section,
     .ecp-field-group,
     .ecp-output-group,
     .ecp-input-field,
-    .ecp-output-field {
-        animation: none;
-        transition: none;
-    }
-    
+    .ecp-output-field,
     .ecp-calculator::before {
-        animation: none;
+        animation: none !important;
+        transition: none !important;
     }
 }
 
-/* ==========================================================================
-   Loading States
-   ========================================================================== */
-
 .ecp-loading {
+    /* Dieser Stil wird möglicherweise nicht mehr benötigt, wenn Animationen anders gehandhabt werden */
     opacity: 0.6;
     pointer-events: none;
     position: relative;
 }
 
 .ecp-loading::after {
+    /* Lade-Spinner */
     content: '';
     position: absolute;
     top: 50%;
@@ -783,21 +716,24 @@
     width: 32px;
     height: 32px;
     margin: -16px 0 0 -16px;
-    border: 3px solid #f3f3f3;
-    border-top: 3px solid #007cba;
+    border: 3px solid var(--ecp-border-color);
+    /* Variable nutzen */
+    border-top-color: var(--ecp-primary-color);
+    /* Variable nutzen */
     border-radius: 50%;
     animation: ecpSpin 1s linear infinite;
     z-index: 1000;
 }
 
 @keyframes ecpSpin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
+    0% {
+        transform: rotate(0deg);
+    }
 
-/* ==========================================================================
-   Error States
-   ========================================================================== */
+    100% {
+        transform: rotate(360deg);
+    }
+}
 
 .ecp-calculator.ecp-error {
     border-color: #dc3545;
@@ -809,49 +745,38 @@
     border-color: #dc3545;
 }
 
-/* ==========================================================================
-   Success States
-   ========================================================================== */
-
 .ecp-calculator.ecp-success .ecp-output-field {
-    background: linear-gradient(135deg, #d4edda 0%, #ffffff 100%);
+    background: linear-gradient(135deg, #d4edda 0%, var(--ecp-output-field-bg) 100%);
     color: #155724;
     border-color: #28a745;
 }
 
-/* ==========================================================================
-   Debug Mode (nur für Entwickler)
-   ========================================================================== */
-
 .ecp-debug .ecp-formula-debug {
     font-size: 10px;
-    color: #6c757d;
+    color: var(--ecp-text-light);
     font-family: 'Courier New', monospace;
     margin-top: 4px;
     padding: 4px 8px;
-    background: #f8f9fa;
+    background: var(--ecp-field-group-bg);
     border-radius: 3px;
-    border-left: 3px solid #007cba;
+    border-left: 3px solid var(--ecp-primary-color);
 }
 
-/* ==========================================================================
-   Custom Scrollbar (für Container mit Overflow)
-   ========================================================================== */
-
+/* Optional: Custom Scrollbar (wenn Container scrollbar sind) */
 .ecp-calculator::-webkit-scrollbar {
     width: 8px;
 }
 
 .ecp-calculator::-webkit-scrollbar-track {
-    background: #f1f1f1;
+    background: var(--ecp-border-color);
     border-radius: 4px;
 }
 
 .ecp-calculator::-webkit-scrollbar-thumb {
-    background: #007cba;
+    background: var(--ecp-primary-color);
     border-radius: 4px;
 }
 
 .ecp-calculator::-webkit-scrollbar-thumb:hover {
-    background: #005a87;
+    background: var(--ecp-secondary-color);
 }
