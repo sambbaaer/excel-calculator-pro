@@ -32,7 +32,7 @@ class ECP_Calculator_Widget extends \Elementor\Widget_Base
      */
     public function get_icon()
     {
-        return 'eicon-calculator';
+        return 'eicon-number-field';
     }
 
     /**

@@ -757,4 +757,65 @@
         window.ECPAdmin = new ECPAdmin();
     });
 
+    handleCopyResult($icon) {
+        if ($icon.hasClass('ecp-copied-feedback')) return;
+
+        const $wrapper = $icon.closest('.ecp-output-wrapper');
+        const $outputField = $wrapper.find('.ecp-output-field');
+        const $outputUnitSpan = $wrapper.find('.ecp-output-unit');
+
+        let valueToCopy = $outputField.text().trim();
+        const unitFromSpan = $outputUnitSpan.length ? $outputUnitSpan.text().trim() : '';
+
+        if (unitFromSpan) {
+            const valueLower = valueToCopy.toLowerCase();
+            const unitLower = unitFromSpan.toLowerCase();
+
+            // Füge die Einheit hinzu, wenn sie nicht bereits Teil des formatierten Wertes ist
+            if (!valueLower.includes(unitLower) && !(valueToCopy.endsWith('%') && unitFromSpan === '%')) {
+                valueToCopy += ' ' + unitFromSpan;
+            }
+        }
+
+        // Moderne Clipboard API oder Fallback
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(valueToCopy).then(() => {
+                this.showCopyFeedback($icon, true);
+            }).catch(() => {
+                this.fallbackCopyToClipboard(valueToCopy, $icon);
+            });
+        } else {
+            this.fallbackCopyToClipboard(valueToCopy, $icon);
+        }
+    }
+
+    fallbackCopyToClipboard(text, $icon) {
+        try {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.left = '-999999px';
+            textArea.style.top = '-999999px';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            const successful = document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.showCopyFeedback($icon, successful);
+        } catch (err) {
+            console.error('ECP: Fallback-Kopieren fehlgeschlagen: ', err);
+            this.showCopyFeedback($icon, false);
+        }
+    }
+
+    showCopyFeedback($icon, success) {
+        const originalIconContent = $icon.html();
+        const feedbackIcon = success ? '✅' : '❌';
+        $icon.html(feedbackIcon).addClass('ecp-copied-feedback');
+
+        setTimeout(() => {
+            $icon.html(originalIconContent).removeClass('ecp-copied-feedback');
+        }, success ? 1500 : 2000);
+    }
+
 })(jQuery);
