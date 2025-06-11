@@ -154,6 +154,10 @@ class ECP_Admin
                 'title' => __('Kalkulatoren', 'excel-calculator-pro'),
                 'icon' => 'dashicons-list-view'
             ),
+            'formulas' => array(
+                'title' => __('Formel-Referenz', 'excel-calculator-pro'),
+                'icon' => 'dashicons-editor-code'
+            ),
             'import-export' => array(
                 'title' => __('Import/Export', 'excel-calculator-pro'),
                 'icon' => 'dashicons-upload'
@@ -182,6 +186,9 @@ class ECP_Admin
         echo '<div class="ecp-tab-content">';
 
         switch ($current_tab) {
+            case 'formulas':
+                $this->formulas_reference_tab();
+                break;
             case 'import-export':
                 $this->import_export_tab();
                 break;
@@ -210,6 +217,346 @@ class ECP_Admin
         </div>
     <?php
     }
+
+    private function formulas_reference_tab()
+    {
+    ?>
+        <div class="ecp-settings-container">
+            <h2><?php _e('Verfügbare Formeln und Funktionen', 'excel-calculator-pro'); ?></h2>
+
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 20px;">
+
+                <!-- Grundrechenarten -->
+                <div class="ecp-formula-category">
+                    <h3><span class="dashicons dashicons-plus-alt"></span> <?php _e('Grundrechenarten', 'excel-calculator-pro'); ?></h3>
+                    <table class="ecp-formula-table">
+                        <tr>
+                            <td><code>field_1 + field_2</code></td>
+                            <td><?php _e('Addition', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>field_1 - field_2</code></td>
+                            <td><?php _e('Subtraktion', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>field_1 * field_2</code></td>
+                            <td><?php _e('Multiplikation', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>field_1 / field_2</code></td>
+                            <td><?php _e('Division', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>field_1 ^ field_2</code></td>
+                            <td><?php _e('Potenz', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Mathematische Funktionen -->
+                <div class="ecp-formula-category">
+                    <h3><span class="dashicons dashicons-calculator"></span> <?php _e('Mathematische Funktionen', 'excel-calculator-pro'); ?></h3>
+                    <table class="ecp-formula-table">
+                        <tr>
+                            <td><code>ABS(field_1)</code></td>
+                            <td><?php _e('Absolutwert', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>SQRT(field_1)</code></td>
+                            <td><?php _e('Quadratwurzel', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>POW(field_1, 2)</code></td>
+                            <td><?php _e('Potenz', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>LOG(field_1)</code></td>
+                            <td><?php _e('Logarithmus', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>PI</code></td>
+                            <td><?php _e('Pi (3.14159...)', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>E</code></td>
+                            <td><?php _e('Eulersche Zahl (2.71828...)', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Rundungsfunktionen -->
+                <div class="ecp-formula-category">
+                    <h3><span class="dashicons dashicons-format-aside"></span> <?php _e('Rundungsfunktionen', 'excel-calculator-pro'); ?></h3>
+                    <table class="ecp-formula-table">
+                        <tr>
+                            <td><code>RUNDEN(field_1, 2)</code></td>
+                            <td><?php _e('Auf 2 Dezimalstellen runden', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>OBERGRENZE(field_1)</code></td>
+                            <td><?php _e('Aufrunden zur nächsten Ganzzahl', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>UNTERGRENZE(field_1)</code></td>
+                            <td><?php _e('Abrunden zur nächsten Ganzzahl', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>OBERGRENZE(field_1, 0.5)</code></td>
+                            <td><?php _e('Aufrunden auf 0.5er-Schritte', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Aggregationsfunktionen -->
+                <div class="ecp-formula-category">
+                    <h3><span class="dashicons dashicons-chart-bar"></span> <?php _e('Aggregationsfunktionen', 'excel-calculator-pro'); ?></h3>
+                    <table class="ecp-formula-table">
+                        <tr>
+                            <td><code>SUMME(field_1, field_2, field_3)</code></td>
+                            <td><?php _e('Summe aller Werte', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>MITTELWERT(field_1, field_2)</code></td>
+                            <td><?php _e('Durchschnitt der Werte', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>MIN(field_1, field_2)</code></td>
+                            <td><?php _e('Kleinster Wert', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>MAX(field_1, field_2)</code></td>
+                            <td><?php _e('Größter Wert', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                    </table>
+                </div>
+
+                <!-- Bedingte Logik -->
+                <div class="ecp-formula-category">
+                    <h3><span class="dashicons dashicons-randomize"></span> <?php _e('Bedingte Logik', 'excel-calculator-pro'); ?></h3>
+                    <table class="ecp-formula-table">
+                        <tr>
+                            <td><code>WENN(field_1 > 100, field_1 * 0.1, 0)</code></td>
+                            <td><?php _e('Einfache Bedingung', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>WENN(field_1 > 1000, 100, WENN(field_1 > 500, 50, 0))</code></td>
+                            <td><?php _e('Verschachtelte Bedingung', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                    </table>
+                    <p><strong><?php _e('Vergleichsoperatoren:', 'excel-calculator-pro'); ?></strong> <code>&gt;</code>, <code>&lt;</code>, <code>&gt;=</code>, <code>&lt;=</code>, <code>=</code>, <code>!=</code></p>
+                </div>
+
+                <!-- Datumsfunktionen -->
+                <div class="ecp-formula-category">
+                    <h3><span class="dashicons dashicons-calendar-alt"></span> <?php _e('Datumsfunktionen', 'excel-calculator-pro'); ?></h3>
+                    <table class="ecp-formula-table">
+                        <tr>
+                            <td><code>HEUTE()</code></td>
+                            <td><?php _e('Heutiges Datum', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>JAHR(HEUTE())</code></td>
+                            <td><?php _e('Aktuelles Jahr', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>MONAT(HEUTE())</code></td>
+                            <td><?php _e('Aktueller Monat', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                        <tr>
+                            <td><code>TAG(HEUTE())</code></td>
+                            <td><?php _e('Aktueller Tag', 'excel-calculator-pro'); ?></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <div class="ecp-formula-examples" style="margin-top: 40px;">
+                <h3><?php _e('Praktische Beispiele', 'excel-calculator-pro'); ?></h3>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 20px;">
+                    <div class="ecp-example-box">
+                        <h4><?php _e('Kreditrechner', 'excel-calculator-pro'); ?></h4>
+                        <p><strong><?php _e('Monatliche Rate:', 'excel-calculator-pro'); ?></strong></p>
+                        <code>RUNDEN((kreditsumme * (zinssatz/100/12) * POW(1 + zinssatz/100/12, laufzeit*12)) / (POW(1 + zinssatz/100/12, laufzeit*12) - 1), 2)</code>
+                    </div>
+
+                    <div class="ecp-example-box">
+                        <h4><?php _e('Rabattrechnung', 'excel-calculator-pro'); ?></h4>
+                        <p><strong><?php _e('Endpreis mit Staffelrabatt:', 'excel-calculator-pro'); ?></strong></p>
+                        <code>WENN(menge > 100, preis * 0.9, WENN(menge > 50, preis * 0.95, preis))</code>
+                    </div>
+
+                    <div class="ecp-example-box">
+                        <h4><?php _e('BMI-Rechner', 'excel-calculator-pro'); ?></h4>
+                        <p><strong><?php _e('Body Mass Index:', 'excel-calculator-pro'); ?></strong></p>
+                        <code>RUNDEN(gewicht / POW(groesse/100, 2), 1)</code>
+                    </div>
+
+                    <div class="ecp-example-box">
+                        <h4><?php _e('Zinseszinsrechnung', 'excel-calculator-pro'); ?></h4>
+                        <p><strong><?php _e('Endkapital:', 'excel-calculator-pro'); ?></strong></p>
+                        <code>startkapital * POW(1 + zinssatz/100, jahre)</code>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <style>
+            .ecp-formula-category {
+                background: #f9f9f9;
+                padding: 20px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+            }
+
+            .ecp-formula-category h3 {
+                margin-top: 0;
+                color: #007cba;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .ecp-formula-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .ecp-formula-table td {
+                padding: 8px 0;
+                border-bottom: 1px solid #eee;
+            }
+
+            .ecp-formula-table td:first-child {
+                font-family: 'Courier New', monospace;
+                font-weight: bold;
+                color: #d63384;
+                padding-right: 15px;
+                vertical-align: top;
+            }
+
+            .ecp-example-box {
+                background: #fff;
+                padding: 20px;
+                border-radius: 8px;
+                border: 1px solid #ddd;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            }
+
+            .ecp-example-box h4 {
+                margin-top: 0;
+                color: #007cba;
+            }
+
+            .ecp-example-box code {
+                display: block;
+                background: #f1f1f1;
+                padding: 10px;
+                border-radius: 4px;
+                font-size: 12px;
+                word-break: break-all;
+            }
+        </style>
+    <?php
+    }
+
+    // ... (Rest der Methoden bleibt unverändert bis auf die sanitize_formulas Methode)
+
+    private function sanitize_formulas($formulas)
+    {
+        if (!is_array($formulas)) {
+            return array();
+        }
+
+        $sanitized = array();
+
+        foreach ($formulas as $formula) {
+            if (!is_array($formula)) {
+                continue;
+            }
+
+            $sanitized_formula = $this->sanitize_single_formula($formula);
+
+            if ($sanitized_formula) {
+                $sanitized[] = $sanitized_formula;
+            }
+        }
+
+        return $sanitized;
+    }
+
+    private function sanitize_single_formula($formula)
+    {
+        if (empty($formula['label'])) {
+            return null;
+        }
+
+        $sanitized = array();
+
+        // Label validation
+        $sanitized['label'] = sanitize_text_field($formula['label']);
+        if (strlen($sanitized['label']) > 255) {
+            throw new InvalidArgumentException(__('Formel-Label ist zu lang.', 'excel-calculator-pro'));
+        }
+
+        // Formula validation - vereinfacht, um den Speicher-Bug zu beheben
+        $sanitized['formula'] = $this->simple_formula_validation($formula['formula'] ?? '');
+
+        // Format validation
+        $allowed_formats = array('', 'currency', 'percentage', 'integer', 'text');
+        $sanitized['format'] = in_array($formula['format'] ?? '', $allowed_formats)
+            ? $formula['format'] : '';
+
+        // Other fields
+        foreach (array('unit', 'help') as $field) {
+            if (isset($formula[$field])) {
+                $sanitized[$field] = sanitize_text_field($formula[$field]);
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Vereinfachte Formel-Validierung um Speicher-Bug zu beheben
+     */
+    private function simple_formula_validation($formula)
+    {
+        if (!is_string($formula)) {
+            throw new InvalidArgumentException(__('Formel muss ein String sein.', 'excel-calculator-pro'));
+        }
+
+        $formula = trim($formula);
+
+        // Check formula length
+        if (strlen($formula) > 5000) {
+            throw new InvalidArgumentException(__('Formel ist zu lang (max. 5000 Zeichen).', 'excel-calculator-pro'));
+        }
+
+        // Basic security checks - gefährliche Muster
+        $dangerous_patterns = array(
+            'eval(',
+            'exec(',
+            'system(',
+            'shell_exec(',
+            'file_get_contents',
+            '<script',
+            'javascript:',
+            'document.',
+            'window.'
+        );
+
+        $formula_lower = strtolower($formula);
+        foreach ($dangerous_patterns as $pattern) {
+            if (strpos($formula_lower, $pattern) !== false) {
+                throw new InvalidArgumentException(__('Formel enthält nicht erlaubte Funktionen.', 'excel-calculator-pro'));
+            }
+        }
+
+        return $formula;
+    }
+
+    // ... (Rest der Klasse bleibt unverändert)
 
     private function import_export_tab()
     {
@@ -449,7 +796,7 @@ class ECP_Admin
         $this->settings_manager->register_settings();
     }
 
-    // AJAX Handlers
+    // AJAX Handlers (bleiben unverändert bis auf bessere Fehlerbehandlung)
     public function ajax_save_calculator()
     {
         $this->verify_admin_access();
@@ -653,44 +1000,6 @@ class ECP_Admin
         }
 
         return $sanitized;
-    }
-
-    private function sanitize_formulas($formulas)
-    {
-        if (!is_array($formulas)) {
-            return array();
-        }
-
-        $sanitized = array();
-        foreach ($formulas as $formula) {
-            if (is_array($formula) && !empty($formula['label']) && !empty($formula['formula'])) {
-                $sanitized[] = array(
-                    'label' => sanitize_text_field($formula['label']),
-                    'formula' => $this->sanitize_formula($formula['formula']),
-                    'format' => sanitize_text_field($formula['format'] ?? ''),
-                    'unit' => sanitize_text_field($formula['unit'] ?? ''),
-                    'help' => sanitize_text_field($formula['help'] ?? '')
-                );
-            }
-        }
-
-        return $sanitized;
-    }
-
-    private function sanitize_formula($formula)
-    {
-        // Basic formula sanitization
-        $formula = trim($formula);
-
-        // Remove dangerous patterns
-        $dangerous = array('eval', 'exec', 'system', 'file_get_contents', 'shell_exec');
-        foreach ($dangerous as $pattern) {
-            if (stripos($formula, $pattern) !== false) {
-                throw new Exception(__('Formel enthält nicht erlaubte Funktionen.', 'excel-calculator-pro'));
-            }
-        }
-
-        return $formula;
     }
 
     private function sanitize_settings($settings)

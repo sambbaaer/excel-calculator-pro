@@ -1,5 +1,5 @@
 /**
- * Excel Calculator Pro - Improved Admin JavaScript
+ * Excel Calculator Pro - Verbessertes Admin JavaScript
  */
 
 (function ($) {
@@ -102,7 +102,7 @@
         }
 
         addField(data = {}) {
-            const fieldId = this.generateUniqueId('field');
+            const fieldId = this.generateShortFieldId('field');
             const fieldHtml = this.generateFieldHTML(fieldId, data);
 
             const $field = $(fieldHtml);
@@ -114,18 +114,30 @@
         }
 
         addOutput(data = {}) {
-            const outputId = this.generateUniqueId('output');
+            const outputId = this.generateShortFieldId('output');
             const outputHtml = this.generateOutputHTML(outputId, data);
 
             const $output = $(outputHtml);
             $('#ecp-outputs-container').append($output);
             $output.hide().slideDown(300);
 
+            this.initializeOutputEvents($output);
             this.markUnsavedChanges();
         }
 
-        generateUniqueId(prefix) {
-            return `${prefix}_${Date.now()}_${++this.fieldCounter}`;
+        /**
+         * Verbesserte ID-Generierung - viel kürzer und benutzerfreundlicher
+         */
+        generateShortFieldId(prefix) {
+            this.fieldCounter++;
+
+            if (prefix === 'field') {
+                // Für Eingabefelder: feld_1, feld_2, etc.
+                return `feld_${this.fieldCounter}`;
+            } else {
+                // Für Ausgabefelder: ergebnis_1, ergebnis_2, etc.
+                return `ergebnis_${this.fieldCounter}`;
+            }
         }
 
         generateFieldHTML(fieldId, data) {
@@ -169,6 +181,10 @@
                             <label>Einheit:</label>
                             <input type="text" class="field-unit" value="${data.unit || ''}" placeholder="€, %, kg">
                         </div>
+                        <div class="ecp-form-row">
+                            <label>Hilfetext:</label>
+                            <input type="text" class="field-help" value="${data.help || ''}" placeholder="Zusätzliche Hinweise">
+                        </div>
                     </div>
                 </div>
             `;
@@ -192,10 +208,10 @@
                         </div>
                         <div class="ecp-form-row">
                             <label>Formel:</label>
-                            <textarea class="output-formula" rows="2" 
-                                      placeholder="z.B. feld_1 * feld_2">${data.formula || ''}</textarea>
+                            <textarea class="output-formula" rows="3" 
+                                      placeholder="z.B. RUNDEN(feld_1 * feld_2, 2)">${data.formula || ''}</textarea>
                             <small class="ecp-formula-help">
-                                Verfügbare Funktionen: WENN, RUNDEN, MIN, MAX, SUMME, MITTELWERT
+                                Verfügbare Funktionen: WENN, RUNDEN, MIN, MAX, SUMME, MITTELWERT, OBERGRENZE, UNTERGRENZE
                             </small>
                         </div>
                         <div class="ecp-form-row">
@@ -206,6 +222,17 @@
                                 <option value="percentage" ${data.format === 'percentage' ? 'selected' : ''}>Prozent</option>
                                 <option value="integer" ${data.format === 'integer' ? 'selected' : ''}>Ganzzahl</option>
                             </select>
+                        </div>
+                        <div class="ecp-form-row">
+                            <label>Einheit:</label>
+                            <input type="text" class="output-unit" value="${data.unit || ''}" 
+                                   placeholder="€, %, Stück, kg (optional)">
+                            <small class="description">Wird zusätzlich zum formatierten Wert angezeigt</small>
+                        </div>
+                        <div class="ecp-form-row">
+                            <label>Hilfetext:</label>
+                            <input type="text" class="output-help" value="${data.help || ''}" 
+                                   placeholder="Zusätzliche Erklärung für das Ergebnis">
                         </div>
                     </div>
                 </div>
@@ -221,6 +248,61 @@
             $field.find('.field-label').on('input', function () {
                 $field.find('.ecp-field-label').text($(this).val() || 'Neues Feld');
             });
+
+            // ID-Vorschläge bei Label-Änderung
+            $field.find('.field-label').on('input', function () {
+                const $idField = $field.find('.field-id');
+                const currentId = $idField.val();
+                const newLabel = $(this).val();
+
+                // Nur automatisch ändern, wenn das ID-Feld noch die ursprüngliche Auto-ID hat
+                if (currentId.match(/^feld_\d+$/)) {
+                    const suggestedId = this.generateIdFromLabel(newLabel);
+                    if (suggestedId) {
+                        $idField.val(suggestedId);
+                    }
+                }
+            }.bind(this));
+        }
+
+        initializeOutputEvents($output) {
+            $output.find('.output-label').on('input', function () {
+                $output.find('.ecp-output-label').text($(this).val() || 'Neue Ausgabe');
+            });
+
+            // Formel-Hilfe erweitern
+            $output.find('.output-formula').on('focus', function () {
+                $(this).siblings('.ecp-formula-help').html(`
+                    <strong>Verfügbare Funktionen:</strong><br>
+                    • RUNDEN(wert, dezimalstellen) - z.B. RUNDEN(feld_1, 2)<br>
+                    • OBERGRENZE(wert) / UNTERGRENZE(wert) - Auf-/Abrunden<br>
+                    • SUMME(feld_1, feld_2, ...) - Addiert alle Werte<br>
+                    • MITTELWERT(feld_1, feld_2) - Durchschnitt<br>
+                    • MIN/MAX(feld_1, feld_2) - Kleinster/Größter Wert<br>
+                    • WENN(bedingung, wert_wenn_wahr, wert_wenn_falsch)<br>
+                    • ABS(wert), SQRT(wert), POW(basis, exponent)
+                `);
+            }).on('blur', function () {
+                $(this).siblings('.ecp-formula-help').html('Verfügbare Funktionen: WENN, RUNDEN, MIN, MAX, SUMME, MITTELWERT, OBERGRENZE, UNTERGRENZE');
+            });
+        }
+
+        /**
+         * Generiert eine benutzerfreundliche ID aus einem Label
+         */
+        generateIdFromLabel(label) {
+            if (!label) return '';
+
+            return label
+                .toLowerCase()
+                .replace(/[äöüß]/g, (match) => {
+                    const map = { 'ä': 'ae', 'ö': 'oe', 'ü': 'ue', 'ß': 'ss' };
+                    return map[match] || match;
+                })
+                .replace(/[^a-z0-9]/g, '_')
+                .replace(/_+/g, '_')
+                .replace(/^_|_$/g, '')
+                .substring(0, 30); // Maximale Länge begrenzen
         }
 
         removeField($button) {
@@ -309,7 +391,8 @@
                     default: $item.find('.field-default').val().trim(),
                     min: $item.find('.field-min').val().trim(),
                     max: $item.find('.field-max').val().trim(),
-                    unit: $item.find('.field-unit').val().trim()
+                    unit: $item.find('.field-unit').val().trim(),
+                    help: $item.find('.field-help').val().trim()
                 };
 
                 if (fieldData.id && fieldData.label) {
@@ -329,7 +412,8 @@
                     label: $item.find('.output-label').val().trim(),
                     formula: $item.find('.output-formula').val().trim(),
                     format: $item.find('.output-format').val(),
-                    unit: $item.find('.output-unit').val().trim()
+                    unit: $item.find('.output-unit').val().trim(),
+                    help: $item.find('.output-help').val().trim()
                 };
 
                 if (formulaData.label && formulaData.formula) {
@@ -342,7 +426,7 @@
     }
 
     /**
-     * Calculator Management Class
+     * Calculator Management Class (unverändert)
      */
     class CalculatorManager {
         constructor(admin) {
@@ -454,7 +538,6 @@
                     if (response.success) {
                         $(`.ecp-calculator-card[data-id="${calculatorId}"]`).fadeOut(300, function () {
                             $(this).remove();
-                            // Check if list is now empty
                             if ($('.ecp-calculator-card').length === 0) {
                                 location.reload();
                             }
@@ -548,7 +631,7 @@
 
         duplicateFromEditor() {
             const data = this.admin.collectFormData();
-            data.id = 0; // Reset ID for new calculator
+            data.id = 0;
             data.name = `${data.name} (Kopie)`;
 
             this.admin.ui.showLoading();
@@ -580,7 +663,7 @@
     }
 
     /**
-     * UI Management Class
+     * UI Management Class (unverändert)
      */
     class UIManager {
         constructor(admin) {
@@ -611,7 +694,7 @@
     }
 
     /**
-     * Notification Management Class
+     * Notification Management Class (unverändert)
      */
     class NotificationManager {
         constructor() {
@@ -619,7 +702,6 @@
         }
 
         init() {
-            // Create notification container if it doesn't exist
             if (!$('.ecp-notifications').length) {
                 $('body').append('<div class="ecp-notifications"></div>');
             }
@@ -636,14 +718,12 @@
             $('.ecp-notifications').append($notification);
             $notification.slideDown(300);
 
-            // Auto-hide
             if (duration > 0) {
                 setTimeout(() => {
                     this.hide($notification);
                 }, duration);
             }
 
-            // Manual close
             $notification.find('.ecp-notification-close').on('click', () => {
                 this.hide($notification);
             });

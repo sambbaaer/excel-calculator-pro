@@ -211,13 +211,12 @@ class ECP_Shortcode
                 <div class="ecp-field-group" data-field-id="<?php echo esc_attr($field['id']); ?>">
                     <label for="ecp-field-<?php echo esc_attr($field['id']); ?>">
                         <?php echo esc_html($field['label']); ?>
+                        <?php if (isset($field['help']) && !empty($field['help'])): ?>
+                            <span class="ecp-field-help-prefix" data-tooltip="<?php echo esc_attr($field['help']); ?>">ℹ️</span>
+                        <?php endif; ?>
                     </label>
 
                     <div class="ecp-input-wrapper">
-                        <?php if (isset($field['help']) && !empty($field['help'])): ?>
-                            <span class="ecp-field-help-prefix"><?php echo esc_html($field['help']); ?></span>
-                        <?php endif; ?>
-
                         <?php
                         $input_type = isset($field['type']) ? $field['type'] : 'number';
                         $default_value = isset($field['default']) ? $field['default'] : '';
@@ -248,7 +247,7 @@ class ECP_Shortcode
     }
 
     /**
-     * Ausgabefelder rendern
+     * Verbesserte Ausgabefelder mit Einheiten-Unterstützung
      */
     private function render_output_fields($formulas)
     {
@@ -271,20 +270,64 @@ class ECP_Shortcode
                             data-formula="<?php echo esc_attr($formula['formula'] ?? ''); ?>"
                             data-format="<?php echo esc_attr($formula['format'] ?? ''); ?>"
                             data-output-id="<?php echo esc_attr($index); ?>">
-                            0
+                            <?php
+                            // Initialwert basierend auf Format
+                            $initial_value = '0';
+                            if (isset($formula['format'])) {
+                                switch ($formula['format']) {
+                                    case 'currency':
+                                        $initial_value = '0,00 CHF'; // Wird durch JavaScript korrigiert
+                                        break;
+                                    case 'percentage':
+                                        $initial_value = '0%';
+                                        break;
+                                    default:
+                                        $initial_value = '0';
+                                }
+                            }
+                            echo esc_html($initial_value);
+                            ?>
                         </span>
 
-                        <?php if (isset($formula['unit']) && !empty($formula['unit'])): ?>
-                            <span class="ecp-output-unit"><?php echo esc_html($formula['unit']); ?></span>
-                        <?php endif; ?>
+                        <?php
+                        // Einheit anzeigen (nur wenn nicht bereits im Format enthalten)
+                        if (isset($formula['unit']) && !empty($formula['unit'])):
+                            $show_unit = true;
 
-                        <span class="ecp-copy-icon" title="<?php esc_attr_e('Kopieren', 'excel-calculator-pro'); ?>" role="button" tabindex="0">📋</span>
+                            // Prüfe, ob die Einheit bereits im Format enthalten ist
+                            if (isset($formula['format'])) {
+                                if ($formula['format'] === 'currency' && in_array($formula['unit'], array('€', '$', 'CHF', 'EUR', 'USD'))) {
+                                    $show_unit = false; // Währung wird bereits vom Format angezeigt
+                                } elseif ($formula['format'] === 'percentage' && $formula['unit'] === '%') {
+                                    $show_unit = false; // Prozent wird bereits vom Format angezeigt
+                                }
+                            }
+
+                            if ($show_unit):
+                        ?>
+                                <span class="ecp-output-unit"><?php echo esc_html($formula['unit']); ?></span>
+                        <?php
+                            endif;
+                        endif;
+                        ?>
+
+                        <span class="ecp-copy-icon"
+                            title="<?php esc_attr_e('Ergebnis kopieren', 'excel-calculator-pro'); ?>"
+                            role="button"
+                            tabindex="0"
+                            aria-label="<?php esc_attr_e('Ergebnis kopieren', 'excel-calculator-pro'); ?>">📋</span>
                     </div>
 
                     <?php if (defined('WP_DEBUG') && WP_DEBUG && current_user_can('manage_options')): ?>
                         <?php if (!empty($formula['formula'])): ?>
-                            <div class="ecp-formula-debug">
-                                <?php echo esc_html($formula['formula']); ?>
+                            <div class="ecp-formula-debug" style="font-size: 11px; color: #666; margin-top: 5px; font-family: monospace;">
+                                <strong>Debug:</strong> <?php echo esc_html($formula['formula']); ?>
+                                <?php if (isset($formula['format']) && !empty($formula['format'])): ?>
+                                    | <strong>Format:</strong> <?php echo esc_html($formula['format']); ?>
+                                <?php endif; ?>
+                                <?php if (isset($formula['unit']) && !empty($formula['unit'])): ?>
+                                    | <strong>Einheit:</strong> <?php echo esc_html($formula['unit']); ?>
+                                <?php endif; ?>
                             </div>
                         <?php endif; ?>
                     <?php endif; ?>
