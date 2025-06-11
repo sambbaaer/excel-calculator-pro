@@ -1,244 +1,155 @@
 <?php
 
 /**
- * Sicherheitsverbesserungen für Excel Calculator Pro
+ * Verbessertes Security-System für Excel Calculator Pro
  */
 
-class ECP_Security_Manager
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class ECP_Security
 {
-    private $nonce_actions = array();
     private $rate_limits = array();
-    private $security_headers = true;
-    private $log_security_events = true;
+    private $security_events = array();
+    private $allowed_functions = array();
 
     public function __construct()
     {
-        $this->init_security_measures();
-        $this->setup_rate_limiting();
-        $this->init_input_sanitization();
+        $this->init_security();
+        $this->setup_rate_limits();
+        $this->define_allowed_functions();
     }
 
-    private function init_security_measures()
+    private function init_security()
     {
-        // Nonce-Validierung für alle AJAX-Aktionen
-        add_action('wp_ajax_ecp_save_calculator', array($this, 'validate_admin_nonce'), 1);
-        add_action('wp_ajax_ecp_delete_calculator', array($this, 'validate_admin_nonce'), 1);
-        add_action('wp_ajax_ecp_get_calculator', array($this, 'validate_admin_nonce'), 1);
-        add_action('wp_ajax_ecp_import_calculator', array($this, 'validate_admin_nonce'), 1);
+        // Nonce validation for all AJAX requests
+        add_action('wp_ajax_ecp_save_calculator', array($this, 'validate_admin_request'), 1);
+        add_action('wp_ajax_ecp_delete_calculator', array($this, 'validate_admin_request'), 1);
+        add_action('wp_ajax_ecp_get_calculator', array($this, 'validate_admin_request'), 1);
+        add_action('wp_ajax_ecp_import_calculator', array($this, 'validate_admin_request'), 1);
+        add_action('wp_ajax_ecp_export_calculator', array($this, 'validate_admin_request'), 1);
 
-        // Frontend AJAX-Sicherheit
-        add_action('wp_ajax_ecp_calculate', array($this, 'validate_frontend_nonce'), 1);
-        add_action('wp_ajax_nopriv_ecp_calculate', array($this, 'validate_frontend_nonce'), 1);
+        // Input sanitization hooks
+        add_filter('ecp_sanitize_calculator_data', array($this, 'sanitize_calculator_data'));
+        add_filter('ecp_validate_formula', array($this, 'validate_formula'));
 
-        // Content-Security-Policy Headers
-        add_action('wp_head', array($this, 'add_security_headers'), 1);
+        // File upload security
+        add_filter('wp_handle_upload_prefilter', array($this, 'validate_file_upload'));
 
-        // File-Upload Sicherheit
-        add_filter('upload_mimes', array($this, 'restrict_upload_mimes'), 10, 2);
-        add_filter('wp_check_filetype_and_ext', array($this, 'validate_file_upload'), 10, 4);
-
-        // SQL-Injection Schutz
-        add_filter('ecp_database_query', array($this, 'sanitize_database_input'), 10, 2);
-
-        // XSS-Schutz für Ausgaben
-        add_filter('ecp_output_value', array($this, 'escape_output'), 10, 2);
-
-        // CSRF-Schutz für Formulare
-        add_action('ecp_form_start', array($this, 'add_csrf_token'));
-        add_action('ecp_form_validate', array($this, 'validate_csrf_token'));
-
-        // Brute-Force Schutz
-        add_action('wp_login_failed', array($this, 'log_failed_login'));
-        add_filter('authenticate', array($this, 'check_brute_force'), 30, 3);
-
-        // Plugin-spezifische Sicherheitsprüfungen
-        add_action('admin_init', array($this, 'check_plugin_integrity'));
-        add_action('wp_loaded', array($this, 'validate_plugin_permissions'));
-
-        // Audit-Logging
+        // Audit logging
         add_action('ecp_calculator_saved', array($this, 'log_calculator_action'), 10, 2);
         add_action('ecp_calculator_deleted', array($this, 'log_calculator_action'), 10, 2);
-        add_action('ecp_settings_updated', array($this, 'log_settings_change'));
     }
 
-    /**
-     * Nonce-Validierung
-     */
-    public function validate_admin_nonce()
-    {
-        $action = $_POST['action'] ?? '';
-
-        if (!check_ajax_referer('ecp_admin_nonce', 'nonce', false)) {
-            $this->log_security_event('invalid_admin_nonce', $action);
-            wp_send_json_error(__('Sicherheitsprüfung fehlgeschlagen. Bitte Seite neu laden.', 'excel-calculator-pro'));
-        }
-
-        if (!current_user_can('manage_options')) {
-            $this->log_security_event('insufficient_permissions', $action);
-            wp_send_json_error(__('Unzureichende Berechtigungen.', 'excel-calculator-pro'));
-        }
-    }
-
-    public function validate_frontend_nonce()
-    {
-        $action = $_POST['action'] ?? '';
-
-        if (!check_ajax_referer('ecp_frontend_nonce', 'nonce', false)) {
-            $this->log_security_event('invalid_frontend_nonce', $action);
-            wp_send_json_error(__('Sicherheitsprüfung fehlgeschlagen.', 'excel-calculator-pro'));
-        }
-
-        // Rate-Limiting für Frontend-Aktionen
-        if (!$this->check_rate_limit('frontend_ajax', 100, 3600)) { // 100 Requests pro Stunde
-            wp_send_json_error(__('Zu viele Anfragen. Bitte warten Sie.', 'excel-calculator-pro'));
-        }
-    }
-
-    /**
-     * Rate-Limiting System
-     */
-    private function setup_rate_limiting()
+    private function setup_rate_limits()
     {
         $this->rate_limits = array(
-            'admin_actions' => array('limit' => 200, 'window' => 3600), // 200/Stunde
-            'frontend_ajax' => array('limit' => 100, 'window' => 3600), // 100/Stunde
-            'file_uploads' => array('limit' => 10, 'window' => 3600),   // 10/Stunde
-            'login_attempts' => array('limit' => 5, 'window' => 900)    // 5/15Min
+            'admin_actions' => array('limit' => 100, 'window' => 3600),
+            'file_uploads' => array('limit' => 5, 'window' => 3600),
+            'failed_validations' => array('limit' => 10, 'window' => 900)
         );
     }
 
-    public function check_rate_limit($action, $limit = null, $window = null)
+    private function define_allowed_functions()
     {
-        $user_ip = $this->get_client_ip();
-        $user_id = get_current_user_id();
+        $this->allowed_functions = array(
+            // German functions
+            'WENN',
+            'RUNDEN',
+            'MIN',
+            'MAX',
+            'SUMME',
+            'MITTELWERT',
+            'ABS',
+            'WURZEL',
+            'POTENZ',
+            'LOG',
+            'HEUTE',
+            'JAHR',
+            'MONAT',
+            'TAG',
 
-        // Identifikations-String: IP + User-ID (falls eingeloggt)
-        $identifier = $user_ip . ($user_id ? '_user_' . $user_id : '');
-        $cache_key = 'rate_limit_' . $action . '_' . md5($identifier);
+            // English functions
+            'IF',
+            'ROUND',
+            'SUM',
+            'AVERAGE',
+            'SQRT',
+            'POW',
+            'TODAY',
+            'YEAR',
+            'MONTH',
+            'DAY',
 
-        // Standard-Limits verwenden falls nicht spezifiziert
-        if ($limit === null) {
-            $limit = $this->rate_limits[$action]['limit'] ?? 50;
-        }
-        if ($window === null) {
-            $window = $this->rate_limits[$action]['window'] ?? 3600;
-        }
-
-        $current_count = get_transient($cache_key) ?: 0;
-
-        if ($current_count >= $limit) {
-            $this->log_security_event('rate_limit_exceeded', $action, array(
-                'identifier' => $identifier,
-                'current_count' => $current_count,
-                'limit' => $limit
-            ));
-            return false;
-        }
-
-        set_transient($cache_key, $current_count + 1, $window);
-        return true;
+            // Math functions
+            'CEILING',
+            'FLOOR',
+            'RAND',
+            'PI',
+            'E'
+        );
     }
 
     /**
-     * Input-Sanitization
+     * Validate admin AJAX requests
      */
-    private function init_input_sanitization()
+    public function validate_admin_request()
     {
-        // Automatische Sanitization für alle $_POST-Daten
-        add_action('init', array($this, 'sanitize_global_input'));
-
-        // Spezielle Sanitization für Plugin-Daten
-        add_filter('ecp_sanitize_calculator_data', array($this, 'sanitize_calculator_data'));
-        add_filter('ecp_sanitize_formula', array($this, 'sanitize_formula'));
-        add_filter('ecp_sanitize_field_data', array($this, 'sanitize_field_data'));
-    }
-
-    public function sanitize_global_input()
-    {
-        // Nur für Plugin-spezifische Aktionen
-        $action = $_POST['action'] ?? '';
-        if (strpos($action, 'ecp_') !== 0) {
-            return;
+        // Check nonce
+        if (!check_ajax_referer('ecp_admin_nonce', 'nonce', false)) {
+            $this->log_security_event('invalid_nonce', $_POST['action'] ?? 'unknown');
+            wp_send_json_error(array('message' => __('Sicherheitsprüfung fehlgeschlagen.', 'excel-calculator-pro')));
         }
 
-        // Rekursive Sanitization
-        $_POST = $this->deep_sanitize($_POST);
-        $_GET = $this->deep_sanitize($_GET);
-        $_REQUEST = $this->deep_sanitize($_REQUEST);
-    }
-
-    private function deep_sanitize($data)
-    {
-        if (is_array($data)) {
-            foreach ($data as $key => $value) {
-                $data[$key] = $this->deep_sanitize($value);
-            }
-        } else {
-            // Basis-Sanitization
-            $data = trim($data);
-            $data = stripslashes($data);
-
-            // XSS-Schutz
-            $data = wp_kses($data, $this->get_allowed_html());
+        // Check capabilities
+        if (!current_user_can('manage_options')) {
+            $this->log_security_event('insufficient_permissions', $_POST['action'] ?? 'unknown');
+            wp_send_json_error(array('message' => __('Unzureichende Berechtigungen.', 'excel-calculator-pro')));
         }
 
-        return $data;
+        // Rate limiting
+        if (!$this->check_rate_limit('admin_actions')) {
+            $this->log_security_event('rate_limit_exceeded', 'admin_actions');
+            wp_send_json_error(array('message' => __('Zu viele Anfragen. Bitte warten Sie.', 'excel-calculator-pro')));
+        }
     }
 
-    private function get_allowed_html()
-    {
-        return array(
-            'b' => array(),
-            'strong' => array(),
-            'i' => array(),
-            'em' => array(),
-            'u' => array(),
-            'br' => array(),
-            'p' => array(),
-            'span' => array('class' => array(), 'style' => array())
-        );
-    }
-
+    /**
+     * Sanitize calculator data
+     */
     public function sanitize_calculator_data($data)
     {
+        if (!is_array($data)) {
+            throw new InvalidArgumentException('Calculator data must be an array');
+        }
+
         $sanitized = array();
 
-        // Name - erforderlich, alphanumerisch mit Leerzeichen
-        if (isset($data['name'])) {
-            $sanitized['name'] = sanitize_text_field($data['name']);
-            if (empty($sanitized['name'])) {
-                throw new Exception(__('Kalkulator-Name ist erforderlich', 'excel-calculator-pro'));
-            }
+        // Name validation
+        if (empty($data['name'])) {
+            throw new InvalidArgumentException(__('Name ist erforderlich.', 'excel-calculator-pro'));
+        }
+        $sanitized['name'] = sanitize_text_field($data['name']);
+
+        if (strlen($sanitized['name']) > 255) {
+            throw new InvalidArgumentException(__('Name ist zu lang (max. 255 Zeichen).', 'excel-calculator-pro'));
         }
 
-        // Beschreibung - optional, Textarea-Content
-        if (isset($data['description'])) {
-            $sanitized['description'] = sanitize_textarea_field($data['description']);
+        // Description
+        $sanitized['description'] = sanitize_textarea_field($data['description'] ?? '');
+
+        // Fields validation
+        if (isset($data['fields'])) {
+            $sanitized['fields'] = $this->sanitize_fields($data['fields']);
         }
 
-        // Felder - Array-Validierung
-        if (isset($data['fields']) && is_array($data['fields'])) {
-            $sanitized['fields'] = array();
-            foreach ($data['fields'] as $field) {
-                $sanitized_field = $this->sanitize_field_data($field);
-                if ($sanitized_field) {
-                    $sanitized['fields'][] = $sanitized_field;
-                }
-            }
+        // Formulas validation
+        if (isset($data['formulas'])) {
+            $sanitized['formulas'] = $this->sanitize_formulas($data['formulas']);
         }
 
-        // Formeln - Array mit spezieller Validierung
-        if (isset($data['formulas']) && is_array($data['formulas'])) {
-            $sanitized['formulas'] = array();
-            foreach ($data['formulas'] as $formula) {
-                $sanitized_formula = $this->sanitize_formula_data($formula);
-                if ($sanitized_formula) {
-                    $sanitized['formulas'][] = $sanitized_formula;
-                }
-            }
-        }
-
-        // Einstellungen - Key-Value Sanitization
+        // Settings validation
         if (isset($data['settings'])) {
             $sanitized['settings'] = $this->sanitize_settings($data['settings']);
         }
@@ -246,102 +157,171 @@ class ECP_Security_Manager
         return $sanitized;
     }
 
-    public function sanitize_field_data($field)
+    /**
+     * Sanitize fields array
+     */
+    private function sanitize_fields($fields)
     {
-        if (!is_array($field)) {
-            return false;
+        if (!is_array($fields)) {
+            return array();
+        }
+
+        $sanitized = array();
+        $field_ids = array();
+
+        foreach ($fields as $field) {
+            if (!is_array($field)) {
+                continue;
+            }
+
+            $sanitized_field = $this->sanitize_single_field($field);
+
+            if ($sanitized_field) {
+                // Check for duplicate field IDs
+                if (in_array($sanitized_field['id'], $field_ids)) {
+                    throw new InvalidArgumentException(
+                        sprintf(__('Doppelte Feld-ID: %s', 'excel-calculator-pro'), $sanitized_field['id'])
+                    );
+                }
+
+                $field_ids[] = $sanitized_field['id'];
+                $sanitized[] = $sanitized_field;
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Sanitize single field
+     */
+    private function sanitize_single_field($field)
+    {
+        if (empty($field['id']) || empty($field['label'])) {
+            return null;
         }
 
         $sanitized = array();
 
-        // Feld-ID - alphanumerisch, Unterstriche erlaubt
-        if (isset($field['id'])) {
-            $sanitized['id'] = sanitize_key($field['id']);
-            if (empty($sanitized['id']) || !preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $sanitized['id'])) {
-                throw new Exception(__('Ungültige Feld-ID: ' . $field['id'], 'excel-calculator-pro'));
-            }
+        // Validate field ID
+        $field_id = sanitize_key($field['id']);
+        if (!preg_match('/^[a-zA-Z][a-zA-Z0-9_]*$/', $field_id)) {
+            throw new InvalidArgumentException(
+                sprintf(__('Ungültige Feld-ID: %s', 'excel-calculator-pro'), $field['id'])
+            );
+        }
+        $sanitized['id'] = $field_id;
+
+        // Validate label
+        $sanitized['label'] = sanitize_text_field($field['label']);
+        if (strlen($sanitized['label']) > 255) {
+            throw new InvalidArgumentException(__('Feld-Label ist zu lang.', 'excel-calculator-pro'));
         }
 
-        // Label - erforderlich
-        if (isset($field['label'])) {
-            $sanitized['label'] = sanitize_text_field($field['label']);
-            if (empty($sanitized['label'])) {
-                return false; // Feld ohne Label ignorieren
-            }
-        }
+        // Type validation
+        $allowed_types = array('number', 'text', 'email', 'tel', 'url');
+        $sanitized['type'] = in_array($field['type'] ?? 'number', $allowed_types)
+            ? $field['type'] : 'number';
 
-        // Typ - Whitelist
-        $allowed_types = array('number', 'text', 'email', 'tel', 'url', 'date');
-        if (isset($field['type'])) {
-            $sanitized['type'] = in_array($field['type'], $allowed_types) ? $field['type'] : 'number';
-        }
-
-        // Numerische Felder
+        // Numeric fields
         foreach (array('min', 'max', 'step', 'default') as $numeric_field) {
-            if (isset($field[$numeric_field])) {
-                $value = $field[$numeric_field];
-                if (is_numeric($value)) {
-                    $sanitized[$numeric_field] = floatval($value);
-                }
+            if (isset($field[$numeric_field]) && is_numeric($field[$numeric_field])) {
+                $sanitized[$numeric_field] = floatval($field[$numeric_field]);
             }
         }
 
-        // Text-Felder
-        foreach (array('placeholder', 'unit', 'help') as $text_field) {
+        // Text fields
+        foreach (array('unit', 'placeholder', 'help') as $text_field) {
             if (isset($field[$text_field])) {
                 $sanitized[$text_field] = sanitize_text_field($field[$text_field]);
             }
         }
 
-        // Boolean-Felder - FIX für den Required-Bug
-        $sanitized['required'] = isset($field['required']) ? filter_var($field['required'], FILTER_VALIDATE_BOOLEAN) : false;
-
         return $sanitized;
     }
 
-    public function sanitize_formula_data($formula)
+    /**
+     * Sanitize formulas array
+     */
+    private function sanitize_formulas($formulas)
     {
-        if (!is_array($formula)) {
-            return false;
+        if (!is_array($formulas)) {
+            return array();
         }
 
         $sanitized = array();
 
-        // Label - erforderlich
-        if (isset($formula['label'])) {
-            $sanitized['label'] = sanitize_text_field($formula['label']);
-            if (empty($sanitized['label'])) {
-                return false;
+        foreach ($formulas as $formula) {
+            if (!is_array($formula)) {
+                continue;
             }
-        }
 
-        // Formel - spezielle Validierung
-        if (isset($formula['formula'])) {
-            $sanitized['formula'] = $this->sanitize_formula($formula['formula']);
-            if (empty($sanitized['formula'])) {
-                throw new Exception(__('Ungültige Formel: ' . $formula['formula'], 'excel-calculator-pro'));
-            }
-        }
+            $sanitized_formula = $this->sanitize_single_formula($formula);
 
-        // Format - Whitelist
-        $allowed_formats = array('', 'currency', 'percentage', 'integer', 'text');
-        if (isset($formula['format'])) {
-            $sanitized['format'] = in_array($formula['format'], $allowed_formats) ? $formula['format'] : '';
-        }
-
-        // Text-Felder
-        foreach (array('unit', 'help') as $text_field) {
-            if (isset($formula[$text_field])) {
-                $sanitized[$text_field] = sanitize_text_field($formula[$text_field]);
+            if ($sanitized_formula) {
+                $sanitized[] = $sanitized_formula;
             }
         }
 
         return $sanitized;
     }
 
-    public function sanitize_formula($formula)
+    /**
+     * Sanitize single formula
+     */
+    private function sanitize_single_formula($formula)
     {
-        // Gefährliche Funktionen und Keywords blockieren
+        if (empty($formula['label']) || empty($formula['formula'])) {
+            return null;
+        }
+
+        $sanitized = array();
+
+        // Label validation
+        $sanitized['label'] = sanitize_text_field($formula['label']);
+        if (strlen($sanitized['label']) > 255) {
+            throw new InvalidArgumentException(__('Formel-Label ist zu lang.', 'excel-calculator-pro'));
+        }
+
+        // Formula validation
+        $sanitized['formula'] = $this->validate_formula($formula['formula']);
+
+        // Format validation
+        $allowed_formats = array('', 'currency', 'percentage', 'integer', 'text');
+        $sanitized['format'] = in_array($formula['format'] ?? '', $allowed_formats)
+            ? $formula['format'] : '';
+
+        // Other fields
+        foreach (array('unit', 'help') as $field) {
+            if (isset($formula[$field])) {
+                $sanitized[$field] = sanitize_text_field($formula[$field]);
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Validate formula syntax and security
+     */
+    public function validate_formula($formula)
+    {
+        if (!is_string($formula)) {
+            throw new InvalidArgumentException(__('Formel muss ein String sein.', 'excel-calculator-pro'));
+        }
+
+        $formula = trim($formula);
+
+        if (empty($formula)) {
+            throw new InvalidArgumentException(__('Formel darf nicht leer sein.', 'excel-calculator-pro'));
+        }
+
+        // Check formula length
+        if (strlen($formula) > 5000) {
+            throw new InvalidArgumentException(__('Formel ist zu lang (max. 5000 Zeichen).', 'excel-calculator-pro'));
+        }
+
+        // Security checks - dangerous patterns
         $dangerous_patterns = array(
             '/\beval\s*\(/i',
             '/\bexec\s*\(/i',
@@ -353,72 +333,63 @@ class ECP_Security_Manager
             '/\bfopen\s*\(/i',
             '/\bfwrite\s*\(/i',
             '/\bunlink\s*\(/i',
-            '/\bmysql_\w+\s*\(/i',
             '/\$_[A-Z]+\[/i',
             '/<\?php/i',
             '/<script/i',
             '/javascript:/i',
-            '/on\w+\s*=/i'
+            '/on\w+\s*=/i',
+            '/document\./i',
+            '/window\./i',
+            '/alert\s*\(/i'
         );
 
         foreach ($dangerous_patterns as $pattern) {
             if (preg_match($pattern, $formula)) {
-                $this->log_security_event('dangerous_formula_detected', 'formula_validation', array(
-                    'formula' => $formula,
-                    'pattern' => $pattern
-                ));
-                throw new Exception(__('Formel enthält nicht erlaubte Funktionen', 'excel-calculator-pro'));
+                $this->log_security_event('dangerous_formula', $formula);
+                throw new InvalidArgumentException(__('Formel enthält nicht erlaubte Funktionen.', 'excel-calculator-pro'));
             }
         }
 
-        // Erlaubte Funktionen und Operatoren definieren
-        $allowed_functions = array(
-            'IF',
-            'WENN',
-            'ROUND',
-            'RUNDEN',
-            'MIN',
-            'MAX',
-            'SUM',
-            'SUMME',
-            'AVERAGE',
-            'MITTELWERT',
-            'ABS',
-            'SQRT',
-            'WURZEL',
-            'POW',
-            'POTENZ',
-            'LOG',
-            'TODAY',
-            'HEUTE',
-            'YEAR',
-            'JAHR',
-            'MONTH',
-            'MONAT',
-            'DAY',
-            'TAG',
-            'CEILING',
-            'OBERGRENZE',
-            'AUFRUNDEN',
-            'FLOOR',
-            'UNTERGRENZE',
-            'ABRUNDEN',
-            'RAND',
-            'ZUFALLSZAHL'
-        );
+        // Validate allowed characters
+        if (!preg_match('/^[a-zA-Z0-9_+\-*\/().,\s<>=!&|äöüÄÖÜß;]+$/', $formula)) {
+            throw new InvalidArgumentException(__('Formel enthält unerlaubte Zeichen.', 'excel-calculator-pro'));
+        }
 
-        // Basis-Bereinigung
-        $formula = trim($formula);
-        $formula = preg_replace('/\s+/', ' ', $formula); // Mehrfache Leerzeichen
+        // Validate function names
+        $this->validate_formula_functions($formula);
 
-        // Validierung der Zeichen (erweitert)
-        if (!preg_match('/^[a-zA-Z0-9_+\-*\/().,\s<>=!&|ÄÖÜäöüß]+$/', $formula)) {
-            throw new Exception(__('Formel enthält unerlaubte Zeichen', 'excel-calculator-pro'));
+        // Validate parentheses balance
+        if (substr_count($formula, '(') !== substr_count($formula, ')')) {
+            throw new InvalidArgumentException(__('Unausgeglichene Klammern in der Formel.', 'excel-calculator-pro'));
         }
 
         return $formula;
     }
 
+    /**
+     * Validate formula functions
+     */
+    private function validate_formula_functions($formula)
+    {
+        // Extract function names
+        preg_match_all('/([A-Z_]+)\s*\(/i', $formula, $matches);
+
+        if (!empty($matches[1])) {
+            foreach ($matches[1] as $function_name) {
+                $function_name = strtoupper($function_name);
+
+                if (!in_array($function_name, $this->allowed_functions)) {
+                    throw new InvalidArgumentException(
+                        sprintf(__('Nicht erlaubte Funktion: %s', 'excel-calculator-pro'), $function_name)
+                    );
+                }
+            }
+        }
+    }
+
+    /**
+     * Sanitize settings array
+     */
     private function sanitize_settings($settings)
     {
         if (!is_array($settings)) {
@@ -445,59 +416,69 @@ class ECP_Security_Manager
     }
 
     /**
-     * File-Upload Sicherheit
+     * Validate file upload
      */
-    public function restrict_upload_mimes($mimes, $user)
+    public function validate_file_upload($file)
     {
-        // Für ECP nur JSON erlauben
-        if (isset($_POST['action']) && $_POST['action'] === 'ecp_import_calculator') {
-            return array('json' => 'application/json');
+        // Only process ECP uploads
+        if (!isset($_POST['action']) || $_POST['action'] !== 'ecp_import_calculator') {
+            return $file;
         }
 
-        return $mimes;
-    }
-
-    public function validate_file_upload($data, $file, $filename, $mimes)
-    {
-        if (isset($_POST['action']) && $_POST['action'] === 'ecp_import_calculator') {
-            // Rate-Limiting für File-Uploads
-            if (!$this->check_rate_limit('file_uploads', 10, 3600)) {
-                $data['error'] = __('Zu viele Datei-Uploads. Bitte warten Sie.', 'excel-calculator-pro');
-                return $data;
-            }
-
-            // Dateigrösse prüfen (1MB Maximum)
-            if ($file['size'] > 1048576) {
-                $data['error'] = __('Datei ist zu gross (Maximum: 1MB)', 'excel-calculator-pro');
-                return $data;
-            }
-
-            // MIME-Type validieren
-            if ($data['type'] !== 'application/json') {
-                $data['error'] = __('Nur JSON-Dateien sind erlaubt', 'excel-calculator-pro');
-                return $data;
-            }
-
-            // Dateiinhalt validieren
-            $content = file_get_contents($file['tmp_name']);
-            if (!$this->validate_json_content($content)) {
-                $data['error'] = __('Ungültiger JSON-Inhalt oder Sicherheitsproblem erkannt', 'excel-calculator-pro');
-                return $data;
-            }
+        // Rate limiting for uploads
+        if (!$this->check_rate_limit('file_uploads')) {
+            $file['error'] = __('Zu viele Datei-Uploads. Bitte warten Sie.', 'excel-calculator-pro');
+            return $file;
         }
 
-        return $data;
+        // File size check (1MB max)
+        if ($file['size'] > 1048576) {
+            $file['error'] = __('Datei ist zu groß (max. 1MB).', 'excel-calculator-pro');
+            return $file;
+        }
+
+        // MIME type check
+        $allowed_types = array('application/json', 'text/plain');
+        if (!in_array($file['type'], $allowed_types)) {
+            $file['error'] = __('Nur JSON-Dateien sind erlaubt.', 'excel-calculator-pro');
+            return $file;
+        }
+
+        // Content validation
+        if (!$this->validate_json_content($file['tmp_name'])) {
+            $file['error'] = __('Ungültiger JSON-Inhalt.', 'excel-calculator-pro');
+            return $file;
+        }
+
+        return $file;
     }
 
-    private function validate_json_content($content)
+    /**
+     * Validate JSON file content
+     */
+    private function validate_json_content($file_path)
     {
-        // JSON-Validierung
+        $content = file_get_contents($file_path);
+
+        if (!$content) {
+            return false;
+        }
+
+        // JSON validation
         $decoded = json_decode($content, true);
         if (json_last_error() !== JSON_ERROR_NONE) {
             return false;
         }
 
-        // Sicherheitsprüfungen für JSON-Inhalt
+        // Structure validation
+        $required_fields = array('name', 'fields', 'formulas');
+        foreach ($required_fields as $field) {
+            if (!isset($decoded[$field])) {
+                return false;
+            }
+        }
+
+        // Security check for content
         $content_lower = strtolower($content);
         $dangerous_strings = array(
             'eval(',
@@ -506,23 +487,16 @@ class ECP_Security_Manager
             'shell_exec(',
             '<script',
             'javascript:',
-            'onload=',
-            'onerror=',
             'document.',
             'window.',
-            'parent.',
             '$_get',
             '$_post',
-            '$_cookie',
-            '$_session'
+            '$_cookie'
         );
 
         foreach ($dangerous_strings as $dangerous) {
             if (strpos($content_lower, $dangerous) !== false) {
-                $this->log_security_event('dangerous_json_content', 'file_upload', array(
-                    'content_snippet' => substr($content, 0, 200),
-                    'dangerous_string' => $dangerous
-                ));
+                $this->log_security_event('dangerous_import_content', $dangerous);
                 return false;
             }
         }
@@ -531,160 +505,96 @@ class ECP_Security_Manager
     }
 
     /**
-     * Security Headers
+     * Rate limiting check
      */
-    public function add_security_headers()
+    private function check_rate_limit($action)
     {
-        if (!$this->security_headers) {
-            return;
+        $user_id = get_current_user_id();
+        $user_ip = $this->get_client_ip();
+        $identifier = $user_id ? "user_{$user_id}" : "ip_{$user_ip}";
+
+        $cache_key = "rate_limit_{$action}_{$identifier}";
+        $current_count = get_transient($cache_key) ?: 0;
+
+        $limit = $this->rate_limits[$action]['limit'] ?? 50;
+        $window = $this->rate_limits[$action]['window'] ?? 3600;
+
+        if ($current_count >= $limit) {
+            return false;
         }
 
-        // Nur für Plugin-Seiten
-        if (!$this->is_plugin_page()) {
-            return;
-        }
-
-        // Content Security Policy
-        $csp = "default-src 'self'; ";
-        $csp .= "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdnjs.cloudflare.com; ";
-        $csp .= "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; ";
-        $csp .= "font-src 'self' https://fonts.gstatic.com; ";
-        $csp .= "img-src 'self' data: https:; ";
-        $csp .= "connect-src 'self' " . admin_url('admin-ajax.php') . ";";
-
-        echo '<meta http-equiv="Content-Security-Policy" content="' . esc_attr($csp) . '">' . "\n";
-
-        // Weitere Security Headers
-        echo '<meta http-equiv="X-Content-Type-Options" content="nosniff">' . "\n";
-        echo '<meta http-equiv="X-Frame-Options" content="SAMEORIGIN">' . "\n";
-        echo '<meta http-equiv="X-XSS-Protection" content="1; mode=block">' . "\n";
-    }
-
-    private function is_plugin_page()
-    {
-        global $post;
-
-        // Admin-Seiten
-        if (is_admin()) {
-            $screen = get_current_screen();
-            return $screen && strpos($screen->id, 'excel-calculator-pro') !== false;
-        }
-
-        // Frontend-Seiten mit Kalkulatoren
-        if ($post) {
-            return has_shortcode($post->post_content, 'excel_calculator') ||
-                has_shortcode($post->post_content, 'ecp_calculator');
-        }
-
-        return false;
+        set_transient($cache_key, $current_count + 1, $window);
+        return true;
     }
 
     /**
-     * Security Event Logging
+     * Log security events
      */
-    private function log_security_event($event_type, $context = '', $details = array())
+    private function log_security_event($event_type, $details = '')
     {
-        if (!$this->log_security_events) {
-            return;
-        }
-
-        $log_entry = array(
-            'timestamp' => current_time('mysql'),
-            'event_type' => $event_type,
-            'context' => $context,
+        $event = array(
+            'type' => $event_type,
+            'details' => $details,
             'user_id' => get_current_user_id(),
-            'user_ip' => $this->get_client_ip(),
+            'ip' => $this->get_client_ip(),
             'user_agent' => $_SERVER['HTTP_USER_AGENT'] ?? '',
-            'request_uri' => $_SERVER['REQUEST_URI'] ?? '',
-            'details' => $details
+            'timestamp' => current_time('mysql'),
+            'request_uri' => $_SERVER['REQUEST_URI'] ?? ''
         );
 
-        // Log in WordPress Option (begrenzt auf die letzten 100 Einträge)
+        // Store in database or option
         $security_log = get_option('ecp_security_log', array());
-        array_unshift($security_log, $log_entry);
-        $security_log = array_slice($security_log, 0, 100);
+        array_unshift($security_log, $event);
 
+        // Keep only last 100 events
+        $security_log = array_slice($security_log, 0, 100);
         update_option('ecp_security_log', $security_log);
 
-        // Kritische Events auch in WordPress Error Log
-        $critical_events = array('sql_injection_attempt', 'dangerous_formula_detected', 'brute_force_detected');
+        // Log critical events to error log
+        $critical_events = array('dangerous_formula', 'dangerous_import_content', 'rate_limit_exceeded');
         if (in_array($event_type, $critical_events)) {
-            error_log('ECP Security Alert: ' . $event_type . ' - ' . json_encode($log_entry));
+            error_log("ECP Security Alert: {$event_type} - " . json_encode($event));
         }
 
-        // Hook für externe Security-Systeme
-        do_action('ecp_security_event', $event_type, $log_entry);
-    }
-
-    public function get_security_log($limit = 50)
-    {
-        $log = get_option('ecp_security_log', array());
-        return array_slice($log, 0, $limit);
+        // Hook for external security systems
+        do_action('ecp_security_event', $event);
     }
 
     /**
-     * Brute-Force Schutz
+     * Log calculator actions for audit trail
      */
-    public function log_failed_login($username)
+    public function log_calculator_action($calculator_id, $action)
     {
-        $ip = $this->get_client_ip();
-        $cache_key = 'login_attempts_' . md5($ip);
-
-        $attempts = get_transient($cache_key) ?: 0;
-        set_transient($cache_key, $attempts + 1, 900); // 15 Minuten
-
-        if ($attempts >= 5) {
-            $this->log_security_event('brute_force_detected', 'login', array(
-                'username' => $username,
-                'attempts' => $attempts + 1
-            ));
-        }
-    }
-
-    public function check_brute_force($user, $username, $password)
-    {
-        $ip = $this->get_client_ip();
-        $cache_key = 'login_attempts_' . md5($ip);
-
-        $attempts = get_transient($cache_key) ?: 0;
-
-        if ($attempts >= 5) {
-            return new WP_Error(
-                'too_many_attempts',
-                __('Zu viele Login-Versuche. Bitte warten Sie 15 Minuten.', 'excel-calculator-pro')
-            );
-        }
-
-        return $user;
+        $this->log_security_event('calculator_action', array(
+            'calculator_id' => $calculator_id,
+            'action' => $action
+        ));
     }
 
     /**
-     * Hilfsfunktionen
+     * Get client IP address
      */
     private function get_client_ip()
     {
         $ip_fields = array(
-            'HTTP_CF_CONNECTING_IP',     // Cloudflare
-            'HTTP_X_FORWARDED_FOR',      // Proxy
-            'HTTP_X_FORWARDED',          // Proxy
-            'HTTP_X_CLUSTER_CLIENT_IP',  // Cluster
-            'HTTP_FORWARDED_FOR',        // Proxy
-            'HTTP_FORWARDED',            // Proxy
-            'REMOTE_ADDR'                // Standard
+            'HTTP_CF_CONNECTING_IP',
+            'HTTP_X_FORWARDED_FOR',
+            'HTTP_X_FORWARDED',
+            'HTTP_FORWARDED_FOR',
+            'HTTP_FORWARDED',
+            'REMOTE_ADDR'
         );
 
         foreach ($ip_fields as $field) {
             if (!empty($_SERVER[$field])) {
                 $ip = $_SERVER[$field];
 
-                // Erste IP bei komma-getrennten IPs
                 if (strpos($ip, ',') !== false) {
                     $ip = explode(',', $ip)[0];
                 }
 
                 $ip = trim($ip);
 
-                // IP-Validierung
                 if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
                     return $ip;
                 }
@@ -695,122 +605,96 @@ class ECP_Security_Manager
     }
 
     /**
-     * CSRF-Schutz
+     * Get security log
      */
-    public function add_csrf_token()
+    public function get_security_log($limit = 50)
     {
-        $token = wp_create_nonce('ecp_csrf_token');
-        echo '<input type="hidden" name="ecp_csrf_token" value="' . esc_attr($token) . '">';
-    }
-
-    public function validate_csrf_token()
-    {
-        if (!isset($_POST['ecp_csrf_token']) || !wp_verify_nonce($_POST['ecp_csrf_token'], 'ecp_csrf_token')) {
-            $this->log_security_event('csrf_token_validation_failed', 'form_submission');
-            wp_die(__('Sicherheitsprüfung fehlgeschlagen. Bitte versuchen Sie es erneut.', 'excel-calculator-pro'));
-        }
+        $log = get_option('ecp_security_log', array());
+        return array_slice($log, 0, $limit);
     }
 
     /**
-     * Plugin-Integrität prüfen
+     * Get security statistics
      */
-    public function check_plugin_integrity()
+    public function get_security_stats()
     {
-        if (!current_user_can('manage_options')) {
-            return;
-        }
+        $log = $this->get_security_log(100);
 
-        // Prüfe kritische Plugin-Dateien
-        $critical_files = array(
-            ECP_PLUGIN_PATH . 'excel-calculator-pro.php',
-            ECP_PLUGIN_PATH . 'includes/class-ecp-database.php',
-            ECP_PLUGIN_PATH . 'includes/class-ecp-admin.php',
-            ECP_PLUGIN_PATH . 'includes/class-ecp-frontend.php'
+        $stats = array(
+            'total_events' => count($log),
+            'events_24h' => 0,
+            'critical_events_24h' => 0,
+            'top_event_types' => array()
         );
 
-        foreach ($critical_files as $file) {
-            if (!file_exists($file)) {
-                $this->log_security_event('plugin_file_missing', 'integrity_check', array('file' => $file));
-                add_action('admin_notices', function () use ($file) {
-                    echo '<div class="notice notice-error"><p><strong>Excel Calculator Pro:</strong> Kritische Datei fehlt: ' . basename($file) . '</p></div>';
-                });
-            }
-        }
-    }
-
-    public function validate_plugin_permissions()
-    {
-        // Prüfe Datei-Berechtigungen
-        $plugin_dir = ECP_PLUGIN_PATH;
-
-        if (is_writable($plugin_dir)) {
-            $this->log_security_event('plugin_directory_writable', 'permission_check', array(
-                'directory' => $plugin_dir
-            ));
-        }
-    }
-
-    /**
-     * Audit-Logging für wichtige Aktionen
-     */
-    public function log_calculator_action($calculator_id, $action = 'unknown')
-    {
-        $this->log_security_event('calculator_action', $action, array(
-            'calculator_id' => $calculator_id,
-            'action' => $action
-        ));
-    }
-
-    public function log_settings_change()
-    {
-        $this->log_security_event('settings_changed', 'admin_action');
-    }
-
-    /**
-     * Security-Dashboard für Admin
-     */
-    public function get_security_overview()
-    {
-        $overview = array();
-
-        // Security-Log-Statistiken
-        $log = $this->get_security_log(100);
-        $overview['total_events'] = count($log);
-
-        // Event-Typen zählen
         $event_counts = array();
-        foreach ($log as $entry) {
-            $type = $entry['event_type'];
-            $event_counts[$type] = ($event_counts[$type] ?? 0) + 1;
+        $critical_events = array('dangerous_formula', 'dangerous_import_content', 'rate_limit_exceeded');
+        $cutoff_time = time() - 86400; // 24 hours ago
+
+        foreach ($log as $event) {
+            $event_time = strtotime($event['timestamp']);
+
+            if ($event_time > $cutoff_time) {
+                $stats['events_24h']++;
+
+                if (in_array($event['type'], $critical_events)) {
+                    $stats['critical_events_24h']++;
+                }
+            }
+
+            $event_counts[$event['type']] = ($event_counts[$event['type']] ?? 0) + 1;
         }
-        $overview['event_counts'] = $event_counts;
 
-        // Kritische Events der letzten 24h
-        $critical_events = array_filter($log, function ($entry) {
-            return strtotime($entry['timestamp']) > (time() - 86400) &&
-                in_array($entry['event_type'], array('brute_force_detected', 'dangerous_formula_detected', 'sql_injection_attempt'));
-        });
-        $overview['critical_events_24h'] = count($critical_events);
+        arsort($event_counts);
+        $stats['top_event_types'] = array_slice($event_counts, 0, 5, true);
 
-        // Rate-Limiting Status
-        $overview['rate_limits'] = $this->rate_limits;
+        return $stats;
+    }
 
-        // Plugin-Integrität
-        $overview['plugin_integrity'] = file_exists(ECP_PLUGIN_PATH . 'excel-calculator-pro.php');
+    /**
+     * Security health check
+     */
+    public function security_health_check()
+    {
+        $issues = array();
 
-        return $overview;
+        // Check for recent critical events
+        $stats = $this->get_security_stats();
+        if ($stats['critical_events_24h'] > 0) {
+            $issues[] = sprintf(
+                __('%d kritische Sicherheitsereignisse in den letzten 24 Stunden.', 'excel-calculator-pro'),
+                $stats['critical_events_24h']
+            );
+        }
+
+        // Check WordPress version
+        if (version_compare(get_bloginfo('version'), '6.0', '<')) {
+            $issues[] = __('WordPress-Version ist nicht aktuell.', 'excel-calculator-pro');
+        }
+
+        // Check SSL
+        if (!is_ssl()) {
+            $issues[] = __('SSL ist nicht aktiviert.', 'excel-calculator-pro');
+        }
+
+        // Check file permissions
+        if (is_writable(ECP_PLUGIN_PATH)) {
+            $issues[] = __('Plugin-Verzeichnis ist beschreibbar.', 'excel-calculator-pro');
+        }
+
+        return $issues;
     }
 }
 
 /**
- * Security-Manager initialisieren
+ * Initialize security system
  */
-function ecp_init_security_manager()
+function ecp_init_security()
 {
     global $ecp_security;
-    $ecp_security = new ECP_Security_Manager();
+    $ecp_security = new ECP_Security();
     return $ecp_security;
 }
 
-// Security-Manager früh starten
-add_action('plugins_loaded', 'ecp_init_security_manager', 1);
+// Start security system early
+add_action('plugins_loaded', 'ecp_init_security', 1);

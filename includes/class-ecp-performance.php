@@ -1,202 +1,250 @@
 <?php
 
 /**
- * Performance-Optimierungen und Caching-System für Excel Calculator Pro
+ * Verbessertes Performance-Management für Excel Calculator Pro
  */
 
-class ECP_Performance_Manager
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+class ECP_Performance
 {
-    private $cache_prefix = 'ecp_';
-    private $cache_group = 'excel_calculator_pro';
-    private $default_cache_time = 3600; // 1 Stunde
+    private $cache_group = 'ecp_performance';
+    private $cache_time = 3600; // 1 hour
     private $performance_data = array();
+    private $timers = array();
+    private $memory_tracking = array();
 
     public function __construct()
     {
-        $this->init_hooks();
-        $this->setup_object_cache();
+        $this->init_performance_monitoring();
+        $this->setup_caching();
+        $this->setup_optimization_hooks();
     }
 
-    private function init_hooks()
+    private function init_performance_monitoring()
     {
-        // Cache-Management
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            add_action('wp_footer', array($this, 'output_performance_data'));
+            add_action('admin_footer', array($this, 'output_performance_data'));
+            add_action('admin_bar_menu', array($this, 'add_admin_bar_performance'), 100);
+        }
+
+        add_action('wp_loaded', array($this, 'schedule_cleanup'));
+        add_action('ecp_performance_cleanup', array($this, 'cleanup_performance_data'));
+    }
+
+    private function setup_caching()
+    {
+        // Cache invalidation hooks
         add_action('ecp_calculator_saved', array($this, 'clear_calculator_cache'));
         add_action('ecp_calculator_deleted', array($this, 'clear_calculator_cache'));
         add_action('ecp_settings_updated', array($this, 'clear_all_cache'));
 
-        // Performance-Monitoring
-        add_action('wp_footer', array($this, 'output_performance_data'));
-        add_action('admin_bar_menu', array($this, 'add_admin_bar_performance'), 100);
+        // Preload critical data
+        add_action('init', array($this, 'preload_critical_data'));
+    }
 
-        // Resource-Optimierung
-        add_action('wp_enqueue_scripts', array($this, 'optimize_script_loading'), 5);
-        add_action('wp_print_styles', array($this, 'optimize_style_loading'), 5);
+    private function setup_optimization_hooks()
+    {
+        // Asset optimization
+        add_action('wp_enqueue_scripts', array($this, 'optimize_frontend_assets'), 5);
+        add_action('admin_enqueue_scripts', array($this, 'optimize_admin_assets'), 5);
 
-        // Database-Optimierung
-        add_action('ecp_daily_cleanup', array($this, 'cleanup_cache'));
-        add_action('wp_loaded', array($this, 'schedule_cleanup'));
+        // Database optimization
+        add_filter('ecp_database_query', array($this, 'optimize_database_query'), 10, 2);
 
-        // Lazy Loading für Kalkulatoren
-        add_filter('ecp_render_calculator', array($this, 'maybe_lazy_load'), 10, 3);
-
-        // Preloading für kritische Ressourcen
-        add_action('wp_head', array($this, 'add_resource_hints'), 1);
+        // Memory optimization
+        add_action('wp_loaded', array($this, 'optimize_memory_usage'));
     }
 
     /**
-     * Object Cache Setup
+     * Performance Timer System
      */
-    private function setup_object_cache()
+    public function start_timer($operation)
     {
-        // Redis/Memcached Detection
-        if (class_exists('Redis') || class_exists('Memcached')) {
-            add_filter('ecp_use_object_cache', '__return_true');
-        }
+        $this->timers[$operation] = array(
+            'start_time' => microtime(true),
+            'start_memory' => memory_get_usage(true),
+            'peak_memory' => memory_get_peak_usage(true)
+        );
     }
 
-    /**
-     * Calculator-spezifisches Caching
-     */
-    public function get_calculator_cache($calculator_id, $cache_key = '')
+    public function end_timer($operation)
     {
-        $start_time = microtime(true);
-
-        if (empty($cache_key)) {
-            $cache_key = 'calculator_' . $calculator_id;
+        if (!isset($this->timers[$operation])) {
+            return false;
         }
 
-        $full_key = $this->cache_prefix . $cache_key;
+        $timer = $this->timers[$operation];
+        $end_time = microtime(true);
+        $end_memory = memory_get_usage(true);
 
-        if (wp_using_ext_object_cache()) {
-            $data = wp_cache_get($full_key, $this->cache_group);
-        } else {
-            $data = get_transient($full_key);
-        }
-
-        $this->log_performance('cache_read', microtime(true) - $start_time, $cache_key);
-
-        return $data;
-    }
-
-    public function set_calculator_cache($calculator_id, $data, $cache_key = '', $expiration = null)
-    {
-        $start_time = microtime(true);
-
-        if (empty($cache_key)) {
-            $cache_key = 'calculator_' . $calculator_id;
-        }
-
-        if ($expiration === null) {
-            $expiration = $this->default_cache_time;
-        }
-
-        $full_key = $this->cache_prefix . $cache_key;
-
-        // Cache-Daten mit Metadaten versehen
-        $cache_data = array(
-            'data' => $data,
-            'timestamp' => time(),
-            'version' => ECP_VERSION,
-            'calculator_id' => $calculator_id
+        $result = array(
+            'operation' => $operation,
+            'duration' => $end_time - $timer['start_time'],
+            'memory_used' => $end_memory - $timer['start_memory'],
+            'memory_peak' => memory_get_peak_usage(true) - $timer['peak_memory'],
+            'timestamp' => current_time('mysql')
         );
 
-        if (wp_using_ext_object_cache()) {
-            $result = wp_cache_set($full_key, $cache_data, $this->cache_group, $expiration);
-        } else {
-            $result = set_transient($full_key, $cache_data, $expiration);
-        }
+        $this->performance_data[] = $result;
+        unset($this->timers[$operation]);
 
-        $this->log_performance('cache_write', microtime(true) - $start_time, $cache_key);
+        // Log slow operations
+        if ($result['duration'] > 1.0) { // More than 1 second
+            $this->log_slow_operation($result);
+        }
 
         return $result;
     }
 
     /**
-     * Intelligente Cache-Invalidierung
+     * Advanced Caching System
      */
-    public function clear_calculator_cache($calculator_id)
+    public function get_cache($key, $group = null)
     {
-        $patterns = array(
-            'calculator_' . $calculator_id,
-            'shortcode_' . $calculator_id . '_*',
-            'results_' . $calculator_id . '_*',
-            'template_' . $calculator_id
-        );
-
-        foreach ($patterns as $pattern) {
-            $this->clear_cache_pattern($pattern);
-        }
-
-        // Event für externe Cache-Systeme
-        do_action('ecp_calculator_cache_cleared', $calculator_id);
-    }
-
-    private function clear_cache_pattern($pattern)
-    {
-        global $wpdb;
+        $group = $group ?: $this->cache_group;
 
         if (wp_using_ext_object_cache()) {
-            // Object Cache - Pattern-basierte Löschung
-            wp_cache_flush_group($this->cache_group);
+            return wp_cache_get($key, $group);
+        }
+
+        return get_transient($this->get_cache_key($key, $group));
+    }
+
+    public function set_cache($key, $data, $expiration = null, $group = null)
+    {
+        $group = $group ?: $this->cache_group;
+        $expiration = $expiration ?: $this->cache_time;
+
+        // Add cache metadata
+        $cache_data = array(
+            'data' => $data,
+            'timestamp' => time(),
+            'version' => ECP_VERSION,
+            'hash' => md5(serialize($data))
+        );
+
+        if (wp_using_ext_object_cache()) {
+            return wp_cache_set($key, $cache_data, $group, $expiration);
+        }
+
+        return set_transient($this->get_cache_key($key, $group), $cache_data, $expiration);
+    }
+
+    public function delete_cache($key, $group = null)
+    {
+        $group = $group ?: $this->cache_group;
+
+        if (wp_using_ext_object_cache()) {
+            return wp_cache_delete($key, $group);
+        }
+
+        return delete_transient($this->get_cache_key($key, $group));
+    }
+
+    private function get_cache_key($key, $group)
+    {
+        return "ecp_{$group}_{$key}";
+    }
+
+    /**
+     * Calculator-specific caching
+     */
+    public function get_calculator_cache($calculator_id, $type = 'data')
+    {
+        $cache_key = "calculator_{$calculator_id}_{$type}";
+        $cached = $this->get_cache($cache_key);
+
+        if ($cached !== false && isset($cached['data'])) {
+            return $cached['data'];
+        }
+
+        return false;
+    }
+
+    public function set_calculator_cache($calculator_id, $data, $type = 'data', $expiration = null)
+    {
+        $cache_key = "calculator_{$calculator_id}_{$type}";
+        return $this->set_cache($cache_key, $data, $expiration);
+    }
+
+    public function clear_calculator_cache($calculator_id = null)
+    {
+        if ($calculator_id) {
+            $patterns = array(
+                "calculator_{$calculator_id}_data",
+                "calculator_{$calculator_id}_rendered",
+                "calculator_{$calculator_id}_settings"
+            );
+
+            foreach ($patterns as $pattern) {
+                $this->delete_cache($pattern);
+            }
         } else {
-            // Transient-basierte Löschung
-            $like_pattern = $wpdb->esc_like('_transient_' . $this->cache_prefix . str_replace('*', '', $pattern)) . '%';
-
-            $wpdb->query($wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-                $like_pattern
-            ));
-
-            $wpdb->query($wpdb->prepare(
-                "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-                '_transient_timeout_' . $like_pattern
-            ));
+            $this->clear_cache_group($this->cache_group);
         }
     }
 
     public function clear_all_cache()
     {
+        $this->clear_cache_group($this->cache_group);
+
+        // Clear WordPress object cache if available
+        if (function_exists('wp_cache_flush')) {
+            wp_cache_flush();
+        }
+    }
+
+    private function clear_cache_group($group)
+    {
+        global $wpdb;
+
         if (wp_using_ext_object_cache()) {
-            wp_cache_flush_group($this->cache_group);
+            wp_cache_flush_group($group);
         } else {
-            global $wpdb;
+            // Clear transients
             $wpdb->query($wpdb->prepare(
                 "DELETE FROM {$wpdb->options} WHERE option_name LIKE %s",
-                $wpdb->esc_like('_transient_' . $this->cache_prefix) . '%'
+                $wpdb->esc_like("_transient_ecp_{$group}") . '%'
             ));
         }
-
-        do_action('ecp_all_cache_cleared');
     }
 
     /**
-     * Script- und Style-Optimierung
+     * Asset Optimization
      */
-    public function optimize_script_loading()
+    public function optimize_frontend_assets()
     {
-        // Conditional Loading - nur laden wenn Kalkulatoren auf der Seite sind
         if (!$this->page_has_calculators()) {
             return;
         }
 
-        // Script-Bundling für bessere Performance
-        $this->bundle_calculator_scripts();
+        // Preload critical resources
+        $this->preload_critical_assets();
 
-        // Preload kritische Ressourcen
-        $this->preload_critical_resources();
+        // Defer non-critical scripts
+        add_filter('script_loader_tag', array($this, 'defer_non_critical_scripts'), 10, 2);
+
+        // Optimize CSS delivery
+        add_filter('style_loader_tag', array($this, 'optimize_css_delivery'), 10, 2);
     }
 
-    public function optimize_style_loading()
+    public function optimize_admin_assets($hook)
     {
-        if (!$this->page_has_calculators()) {
+        if (!$this->is_ecp_admin_page($hook)) {
             return;
         }
 
-        // Critical CSS inline einbetten
-        $this->embed_critical_css();
+        // Bundle assets if not in debug mode
+        if (!defined('WP_DEBUG') || !WP_DEBUG) {
+            $this->bundle_admin_assets();
+        }
 
-        // Non-critical CSS asynchron laden
-        $this->async_load_non_critical_css();
+        // Minify inline styles
+        add_filter('ecp_inline_styles', array($this, 'minify_css'));
     }
 
     private function page_has_calculators()
@@ -207,189 +255,206 @@ class ECP_Performance_Manager
             return false;
         }
 
-        // Cache-Key für Seiten-Analyse
-        $cache_key = 'page_calculators_' . $post->ID;
-        $cached_result = $this->get_calculator_cache($post->ID, $cache_key);
+        $cache_key = "page_has_calculators_{$post->ID}";
+        $cached = $this->get_cache($cache_key);
+
+        if ($cached !== false) {
+            return $cached['data'];
+        }
+
+        $has_calculators = has_shortcode($post->post_content, 'excel_calculator') ||
+            has_shortcode($post->post_content, 'ecp_calculator');
+
+        $this->set_cache($cache_key, $has_calculators, 1800); // 30 minutes
+
+        return $has_calculators;
+    }
+
+    private function is_ecp_admin_page($hook)
+    {
+        return strpos($hook, 'excel-calculator-pro') !== false;
+    }
+
+    private function preload_critical_assets()
+    {
+        echo '<link rel="preload" href="' . ECP_PLUGIN_URL . 'assets/frontend.css" as="style">' . "\n";
+        echo '<link rel="preload" href="' . ECP_PLUGIN_URL . 'assets/frontend.js" as="script">' . "\n";
+    }
+
+    public function defer_non_critical_scripts($tag, $handle)
+    {
+        $non_critical_scripts = array('ecp-frontend-js');
+
+        if (in_array($handle, $non_critical_scripts)) {
+            return str_replace(' src', ' defer src', $tag);
+        }
+
+        return $tag;
+    }
+
+    public function optimize_css_delivery($tag, $handle)
+    {
+        if ($handle === 'ecp-frontend-css') {
+            // Add preload for CSS
+            $preload_tag = str_replace('rel=\'stylesheet\'', 'rel=\'preload\' as=\'style\' onload="this.onload=null;this.rel=\'stylesheet\'"', $tag);
+            return $preload_tag . '<noscript>' . $tag . '</noscript>';
+        }
+
+        return $tag;
+    }
+
+    /**
+     * Database Optimization
+     */
+    public function optimize_database_query($query, $type)
+    {
+        // Add query caching for expensive operations
+        if (strpos($query, 'SELECT') === 0) {
+            return $this->cache_database_query($query);
+        }
+
+        return $query;
+    }
+
+    private function cache_database_query($query)
+    {
+        $cache_key = 'db_query_' . md5($query);
+        $cached_result = $this->get_cache($cache_key);
 
         if ($cached_result !== false) {
             return $cached_result['data'];
         }
 
-        // Shortcodes prüfen
-        $has_shortcodes = has_shortcode($post->post_content, 'excel_calculator') ||
-            has_shortcode($post->post_content, 'ecp_calculator') ||
-            has_shortcode($post->post_content, 'ecp_list');
+        // Execute query and cache result
+        global $wpdb;
+        $result = $wpdb->get_results($query);
 
-        // Widget-Bereiche prüfen
-        $has_widgets = $this->check_widgets_for_calculators();
-
-        $result = $has_shortcodes || $has_widgets;
-
-        // Ergebnis cachen
-        $this->set_calculator_cache($post->ID, $result, $cache_key, 1800); // 30 Minuten
+        if (!$wpdb->last_error) {
+            $this->set_cache($cache_key, $result, 1800); // 30 minutes
+        }
 
         return $result;
     }
 
-    private function check_widgets_for_calculators()
+    /**
+     * Memory Optimization
+     */
+    public function optimize_memory_usage()
     {
-        // Vereinfachte Widget-Prüfung
-        $sidebars = wp_get_sidebars_widgets();
+        // Track memory usage
+        $this->memory_tracking['initial'] = memory_get_usage(true);
 
-        foreach ($sidebars as $sidebar_id => $widgets) {
-            if (is_array($widgets)) {
-                foreach ($widgets as $widget) {
-                    if (strpos($widget, 'ecp_') === 0) {
-                        return true;
-                    }
-                }
-            }
+        // Set memory limit if not sufficient
+        $current_limit = ini_get('memory_limit');
+        $current_bytes = $this->convert_to_bytes($current_limit);
+        $required_bytes = 128 * 1024 * 1024; // 128MB
+
+        if ($current_bytes < $required_bytes) {
+            ini_set('memory_limit', '128M');
         }
 
-        return false;
+        // Register shutdown function to track peak memory
+        register_shutdown_function(array($this, 'track_peak_memory'));
     }
 
-    private function bundle_calculator_scripts()
+    public function track_peak_memory()
     {
-        // Nur in Produktion aktivieren
-        if (defined('WP_DEBUG') && WP_DEBUG) {
-            return;
-        }
+        $this->memory_tracking['peak'] = memory_get_peak_usage(true);
+        $this->memory_tracking['final'] = memory_get_usage(true);
 
-        $bundle_cache_key = 'script_bundle_' . ECP_VERSION;
-        $bundle_url = $this->get_calculator_cache(0, $bundle_cache_key);
-
-        if ($bundle_url === false) {
-            $bundle_url = $this->create_script_bundle();
-            $this->set_calculator_cache(0, $bundle_url, $bundle_cache_key, 86400); // 24 Stunden
-        }
-
-        if ($bundle_url) {
-            wp_dequeue_script('ecp-frontend-js');
-            wp_enqueue_script('ecp-bundled-js', $bundle_url['data'], array('jquery'), ECP_VERSION, true);
+        // Log high memory usage
+        if ($this->memory_tracking['peak'] > 100 * 1024 * 1024) { // 100MB
+            error_log('ECP High Memory Usage: ' . size_format($this->memory_tracking['peak']));
         }
     }
 
-    private function create_script_bundle()
+    private function convert_to_bytes($value)
     {
-        $upload_dir = wp_upload_dir();
-        $bundle_dir = $upload_dir['basedir'] . '/ecp-bundles/';
-        $bundle_url_base = $upload_dir['baseurl'] . '/ecp-bundles/';
+        $value = trim($value);
+        $last = strtolower($value[strlen($value) - 1]);
+        $value = (int) $value;
 
-        if (!file_exists($bundle_dir)) {
-            wp_mkdir_p($bundle_dir);
+        switch ($last) {
+            case 'g':
+                $value *= 1024;
+            case 'm':
+                $value *= 1024;
+            case 'k':
+                $value *= 1024;
         }
 
-        $bundle_file = 'ecp-bundle-' . md5(ECP_VERSION . filemtime(ECP_PLUGIN_PATH . 'assets/frontend.js')) . '.js';
-        $bundle_path = $bundle_dir . $bundle_file;
-        $bundle_url = $bundle_url_base . $bundle_file;
-
-        if (!file_exists($bundle_path)) {
-            $scripts = array(
-                ECP_PLUGIN_PATH . 'assets/frontend.js'
-            );
-
-            $bundled_content = '';
-            foreach ($scripts as $script) {
-                if (file_exists($script)) {
-                    $bundled_content .= file_get_contents($script) . "\n";
-                }
-            }
-
-            // Minifizierung (einfach)
-            $bundled_content = $this->minify_js($bundled_content);
-
-            file_put_contents($bundle_path, $bundled_content);
-        }
-
-        return $bundle_url;
-    }
-
-    private function minify_js($js)
-    {
-        // Einfache JS-Minifizierung
-        $js = preg_replace('/\/\*[\s\S]*?\*\//', '', $js); // Block-Kommentare
-        $js = preg_replace('/\/\/.*$/m', '', $js); // Zeilen-Kommentare
-        $js = preg_replace('/\s+/', ' ', $js); // Mehrfache Leerzeichen
-        $js = trim($js);
-
-        return $js;
-    }
-
-    private function embed_critical_css()
-    {
-        $critical_css = $this->get_critical_css();
-
-        if ($critical_css) {
-            echo '<style id="ecp-critical-css">' . $critical_css . '</style>';
-        }
-    }
-
-    private function get_critical_css()
-    {
-        $cache_key = 'critical_css_' . ECP_VERSION;
-        $cached_css = $this->get_calculator_cache(0, $cache_key);
-
-        if ($cached_css !== false) {
-            return $cached_css['data'];
-        }
-
-        // Critical CSS definieren (Above-the-fold Styles)
-        $critical_css = '
-        .ecp-calculator{max-width:700px;margin:30px auto;padding:30px;border:1px solid #e1e5e9;border-radius:12px;background:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-        .ecp-calculator-title{font-size:28px;font-weight:700;color:#1a202c;margin:0 0 12px 0}
-        .ecp-field-group{margin-bottom:24px;display:flex;align-items:center;padding:20px;background:#f8f9fa;border:1px solid #e9ecef;border-radius:10px}
-        .ecp-input-field{padding:14px 18px;border:2px solid #dee2e6;border-radius:8px;width:240px;font-size:16px}
-        .ecp-output-field{font-weight:700;font-size:20px;color:#007cba;background:#fff;padding:14px 20px;border-radius:8px;border:2px solid #007cba}
-        ';
-
-        $this->set_calculator_cache(0, $critical_css, $cache_key, 86400);
-
-        return $critical_css;
+        return $value;
     }
 
     /**
-     * Performance-Monitoring
+     * Critical Data Preloading
      */
-    public function start_performance_timer($operation)
+    public function preload_critical_data()
     {
-        $this->performance_data[$operation] = array(
-            'start' => microtime(true),
-            'memory_start' => memory_get_usage()
-        );
+        // Preload frequently used settings
+        $this->preload_settings();
+
+        // Preload active calculators list
+        $this->preload_active_calculators();
+
+        // Preload templates
+        $this->preload_templates();
     }
 
-    public function end_performance_timer($operation)
+    private function preload_settings()
     {
-        if (!isset($this->performance_data[$operation])) {
-            return;
+        $cache_key = 'preloaded_settings';
+
+        if ($this->get_cache($cache_key) === false) {
+            $settings = array(
+                'general' => get_option('ecp_general_settings', array()),
+                'colors' => get_option('ecp_color_settings', array())
+            );
+
+            $this->set_cache($cache_key, $settings, 3600);
         }
-
-        $this->performance_data[$operation]['end'] = microtime(true);
-        $this->performance_data[$operation]['memory_end'] = memory_get_usage();
-        $this->performance_data[$operation]['duration'] =
-            $this->performance_data[$operation]['end'] - $this->performance_data[$operation]['start'];
-        $this->performance_data[$operation]['memory_used'] =
-            $this->performance_data[$operation]['memory_end'] - $this->performance_data[$operation]['memory_start'];
     }
 
-    private function log_performance($operation, $duration, $details = '')
+    private function preload_active_calculators()
     {
-        if (!defined('WP_DEBUG') || !WP_DEBUG) {
-            return;
-        }
+        $cache_key = 'active_calculators_list';
 
-        $this->performance_data['operations'][] = array(
-            'operation' => $operation,
-            'duration' => $duration,
-            'details' => $details,
-            'timestamp' => microtime(true)
-        );
+        if ($this->get_cache($cache_key) === false) {
+            global $wpdb;
+
+            $calculators = $wpdb->get_results(
+                "SELECT id, name FROM {$wpdb->prefix}excel_calculators 
+                 WHERE status = 'active' 
+                 ORDER BY name ASC"
+            );
+
+            $this->set_cache($cache_key, $calculators, 1800);
+        }
     }
 
+    private function preload_templates()
+    {
+        $cache_key = 'available_templates';
+
+        if ($this->get_cache($cache_key) === false) {
+            global $wpdb;
+
+            $templates = $wpdb->get_results(
+                "SELECT id, name, category FROM {$wpdb->prefix}excel_calculator_templates 
+                 WHERE is_public = 1 
+                 ORDER BY sort_order ASC, name ASC"
+            );
+
+            $this->set_cache($cache_key, $templates, 3600);
+        }
+    }
+
+    /**
+     * Performance Monitoring
+     */
     public function output_performance_data()
     {
-        if (!current_user_can('manage_options') || !defined('WP_DEBUG') || !WP_DEBUG) {
+        if (!current_user_can('manage_options')) {
             return;
         }
 
@@ -398,16 +463,29 @@ class ECP_Performance_Manager
         }
 
         echo "\n<!-- ECP Performance Data\n";
-        foreach ($this->performance_data as $operation => $data) {
-            if (is_array($data) && isset($data['duration'])) {
-                printf(
-                    "%s: %.4fms (Memory: %s)\n",
-                    $operation,
-                    $data['duration'] * 1000,
-                    size_format($data['memory_used'])
-                );
-            }
+
+        $total_time = 0;
+        $total_memory = 0;
+
+        foreach ($this->performance_data as $data) {
+            printf(
+                "%s: %.4fms (Memory: %s)\n",
+                $data['operation'],
+                $data['duration'] * 1000,
+                size_format($data['memory_used'])
+            );
+
+            $total_time += $data['duration'];
+            $total_memory += $data['memory_used'];
         }
+
+        printf(
+            "Total: %.4fms (Memory: %s, Peak: %s)\n",
+            $total_time * 1000,
+            size_format($total_memory),
+            size_format(memory_get_peak_usage(true))
+        );
+
         echo "-->\n";
     }
 
@@ -417,52 +495,198 @@ class ECP_Performance_Manager
             return;
         }
 
-        $total_time = 0;
-        $operation_count = 0;
+        $performance_summary = $this->get_performance_summary();
 
-        foreach ($this->performance_data as $data) {
-            if (is_array($data) && isset($data['duration'])) {
-                $total_time += $data['duration'];
-                $operation_count++;
-            }
-        }
-
-        if ($operation_count > 0) {
+        if ($performance_summary) {
             $wp_admin_bar->add_node(array(
                 'id' => 'ecp-performance',
-                'title' => sprintf('ECP: %.2fms (%d ops)', $total_time * 1000, $operation_count),
-                'href' => admin_url('admin.php?page=excel-calculator-pro&tab=debug')
+                'title' => sprintf(
+                    'ECP: %s | %s',
+                    $performance_summary['time'],
+                    $performance_summary['memory']
+                ),
+                'href' => admin_url('admin.php?page=excel-calculator-pro&tab=performance')
             ));
         }
     }
 
+    private function get_performance_summary()
+    {
+        if (empty($this->performance_data)) {
+            return null;
+        }
+
+        $total_time = array_sum(array_column($this->performance_data, 'duration'));
+        $peak_memory = memory_get_peak_usage(true);
+
+        return array(
+            'time' => sprintf('%.2fms', $total_time * 1000),
+            'memory' => size_format($peak_memory),
+            'operations' => count($this->performance_data)
+        );
+    }
+
     /**
-     * Database-Optimierung
+     * Performance Analytics
      */
+    public function get_performance_report($days = 7)
+    {
+        $cache_key = "performance_report_{$days}d";
+        $cached = $this->get_cache($cache_key);
+
+        if ($cached !== false) {
+            return $cached['data'];
+        }
+
+        $report = array(
+            'cache_stats' => $this->get_cache_statistics(),
+            'slow_operations' => $this->get_slow_operations($days),
+            'memory_usage' => $this->get_memory_statistics(),
+            'database_performance' => $this->get_database_performance(),
+            'recommendations' => $this->get_performance_recommendations()
+        );
+
+        $this->set_cache($cache_key, $report, 3600);
+
+        return $report;
+    }
+
+    private function get_cache_statistics()
+    {
+        $stats = array(
+            'hit_rate' => 0,
+            'total_requests' => 0,
+            'cache_size' => 0
+        );
+
+        // Implement cache statistics collection
+        $cache_log = get_option('ecp_cache_log', array());
+
+        if (!empty($cache_log)) {
+            $hits = array_filter($cache_log, function ($entry) {
+                return $entry['type'] === 'hit';
+            });
+
+            $stats['hit_rate'] = count($hits) / count($cache_log) * 100;
+            $stats['total_requests'] = count($cache_log);
+        }
+
+        return $stats;
+    }
+
+    private function get_slow_operations($days)
+    {
+        $slow_operations = get_option('ecp_slow_operations', array());
+        $cutoff_date = date('Y-m-d H:i:s', strtotime("-{$days} days"));
+
+        return array_filter($slow_operations, function ($operation) use ($cutoff_date) {
+            return $operation['timestamp'] >= $cutoff_date;
+        });
+    }
+
+    private function get_memory_statistics()
+    {
+        return array(
+            'current_usage' => memory_get_usage(true),
+            'peak_usage' => memory_get_peak_usage(true),
+            'limit' => ini_get('memory_limit'),
+            'tracking_data' => $this->memory_tracking
+        );
+    }
+
+    private function get_database_performance()
+    {
+        global $wpdb;
+
+        return array(
+            'total_queries' => get_num_queries(),
+            'query_time' => timer_stop(),
+            'slow_queries' => $this->get_slow_database_queries()
+        );
+    }
+
+    private function get_slow_database_queries()
+    {
+        // This would require database query logging
+        return get_option('ecp_slow_queries', array());
+    }
+
+    private function get_performance_recommendations()
+    {
+        $recommendations = array();
+
+        // Check cache hit rate
+        $cache_stats = $this->get_cache_statistics();
+        if ($cache_stats['hit_rate'] < 80) {
+            $recommendations[] = array(
+                'type' => 'cache',
+                'message' => __('Cache-Hit-Rate ist niedrig. Erwägen Sie eine Verlängerung der Cache-Zeit.', 'excel-calculator-pro'),
+                'priority' => 'medium'
+            );
+        }
+
+        // Check memory usage
+        $memory_stats = $this->get_memory_statistics();
+        $memory_usage_percent = ($memory_stats['current_usage'] / $this->convert_to_bytes($memory_stats['limit'])) * 100;
+
+        if ($memory_usage_percent > 80) {
+            $recommendations[] = array(
+                'type' => 'memory',
+                'message' => __('Hohe Speichernutzung erkannt. Optimierung empfohlen.', 'excel-calculator-pro'),
+                'priority' => 'high'
+            );
+        }
+
+        // Check for object cache
+        if (!wp_using_ext_object_cache()) {
+            $recommendations[] = array(
+                'type' => 'cache',
+                'message' => __('Object Cache nicht aktiviert. Redis oder Memcached empfohlen.', 'excel-calculator-pro'),
+                'priority' => 'low'
+            );
+        }
+
+        return $recommendations;
+    }
+
+    /**
+     * Logging and Cleanup
+     */
+    private function log_slow_operation($operation)
+    {
+        $slow_operations = get_option('ecp_slow_operations', array());
+        array_unshift($slow_operations, $operation);
+
+        // Keep only last 50 entries
+        $slow_operations = array_slice($slow_operations, 0, 50);
+        update_option('ecp_slow_operations', $slow_operations);
+    }
+
     public function schedule_cleanup()
     {
-        if (!wp_next_scheduled('ecp_daily_cleanup')) {
-            wp_schedule_event(time(), 'daily', 'ecp_daily_cleanup');
+        if (!wp_next_scheduled('ecp_performance_cleanup')) {
+            wp_schedule_event(time(), 'daily', 'ecp_performance_cleanup');
         }
     }
 
-    public function cleanup_cache()
+    public function cleanup_performance_data()
     {
-        // Abgelaufene Cache-Einträge löschen
+        // Clean old performance logs
+        delete_option('ecp_slow_operations');
+        delete_option('ecp_cache_log');
+
+        // Clear expired cache entries
         $this->cleanup_expired_cache();
 
-        // Statistiken aktualisieren
-        $this->update_cache_statistics();
-
-        // Alte Bundle-Dateien löschen
-        $this->cleanup_old_bundles();
+        // Optimize database tables
+        $this->optimize_database_tables();
     }
 
     private function cleanup_expired_cache()
     {
         global $wpdb;
 
-        // Abgelaufene Transients löschen
+        // Clean expired transients
         $wpdb->query("
             DELETE t1, t2 FROM {$wpdb->options} t1
             LEFT JOIN {$wpdb->options} t2 ON t2.option_name = REPLACE(t1.option_name, '_transient_', '_transient_timeout_')
@@ -471,181 +695,41 @@ class ECP_Performance_Manager
         ");
     }
 
-    private function cleanup_old_bundles()
-    {
-        $upload_dir = wp_upload_dir();
-        $bundle_dir = $upload_dir['basedir'] . '/ecp-bundles/';
-
-        if (!is_dir($bundle_dir)) {
-            return;
-        }
-
-        $files = glob($bundle_dir . 'ecp-bundle-*.js');
-        $current_bundle = 'ecp-bundle-' . md5(ECP_VERSION . filemtime(ECP_PLUGIN_PATH . 'assets/frontend.js')) . '.js';
-
-        foreach ($files as $file) {
-            $filename = basename($file);
-            if ($filename !== $current_bundle && filemtime($file) < (time() - 7 * 24 * 3600)) {
-                unlink($file);
-            }
-        }
-    }
-
-    /**
-     * Resource Hints für bessere Performance
-     */
-    public function add_resource_hints()
-    {
-        if (!$this->page_has_calculators()) {
-            return;
-        }
-
-        // DNS-Prefetch für externe Ressourcen
-        echo '<link rel="dns-prefetch" href="//cdnjs.cloudflare.com">' . "\n";
-
-        // Preload kritische Assets
-        echo '<link rel="preload" href="' . ECP_PLUGIN_URL . 'assets/frontend.css" as="style">' . "\n";
-        echo '<link rel="preload" href="' . ECP_PLUGIN_URL . 'assets/frontend.js" as="script">' . "\n";
-
-        // Prefetch für wahrscheinlich benötigte Ressourcen
-        echo '<link rel="prefetch" href="' . admin_url('admin-ajax.php') . '">' . "\n";
-    }
-
-    /**
-     * Cache-Statistiken
-     */
-    public function get_cache_statistics()
+    private function optimize_database_tables()
     {
         global $wpdb;
 
-        $stats = array();
-
-        // Transient-Statistiken
-        $transient_count = $wpdb->get_var("
-            SELECT COUNT(*) FROM {$wpdb->options} 
-            WHERE option_name LIKE '_transient_ecp_%'
-        ");
-
-        $stats['transient_count'] = $transient_count;
-
-        // Object Cache Statistiken (falls verfügbar)
-        if (wp_using_ext_object_cache()) {
-            $stats['object_cache'] = true;
-            $stats['cache_type'] = $this->detect_cache_type();
-        } else {
-            $stats['object_cache'] = false;
-            $stats['cache_type'] = 'transients';
-        }
-
-        // Cache-Grösse schätzen
-        $cache_size = $wpdb->get_var("
-            SELECT SUM(LENGTH(option_value)) FROM {$wpdb->options} 
-            WHERE option_name LIKE '_transient_ecp_%'
-        ");
-
-        $stats['cache_size'] = $cache_size;
-
-        return $stats;
-    }
-
-    private function detect_cache_type()
-    {
-        if (class_exists('Redis')) {
-            return 'Redis';
-        } elseif (class_exists('Memcached')) {
-            return 'Memcached';
-        } elseif (function_exists('apcu_store')) {
-            return 'APCu';
-        } else {
-            return 'Unknown Object Cache';
-        }
-    }
-
-    private function update_cache_statistics()
-    {
-        $stats = $this->get_cache_statistics();
-        update_option('ecp_cache_stats', $stats);
-    }
-
-    /**
-     * Lazy Loading für Kalkulatoren
-     */
-    public function maybe_lazy_load($output, $calculator, $atts)
-    {
-        // Lazy Loading nur bei grossen Kalkulatoren oder expliziter Anfrage
-        $should_lazy_load = (
-            isset($atts['lazy']) && $atts['lazy'] === 'true'
-        ) || (
-            count($calculator->fields) > 10 ||
-            count($calculator->formulas) > 5
+        $tables = array(
+            $wpdb->prefix . 'excel_calculators',
+            $wpdb->prefix . 'excel_calculator_templates'
         );
 
-        if ($should_lazy_load) {
-            return $this->render_lazy_placeholder($calculator, $atts);
+        foreach ($tables as $table) {
+            $wpdb->query("OPTIMIZE TABLE {$table}");
         }
-
-        return $output;
     }
 
-    private function render_lazy_placeholder($calculator, $atts)
+    public function minify_css($css)
     {
-        $placeholder_id = 'ecp-lazy-' . $calculator->id . '-' . mt_rand();
+        // Remove comments
+        $css = preg_replace('!/\*[^*]*\*+([^/][^*]*\*+)*/!', '', $css);
 
-        ob_start();
-?>
-        <div id="<?php echo esc_attr($placeholder_id); ?>" class="ecp-lazy-placeholder"
-            data-calculator-id="<?php echo esc_attr($calculator->id); ?>"
-            style="min-height: 300px; background: #f9f9f9; border: 1px dashed #ccc; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer;">
-            <div class="ecp-lazy-content" style="text-align: center;">
-                <div style="font-size: 48px; margin-bottom: 16px;">⚡</div>
-                <h3 style="margin: 0 0 8px 0;"><?php echo esc_html($calculator->name); ?></h3>
-                <p style="margin: 0 0 16px 0; color: #666;">Klicken Sie hier, um den Kalkulator zu laden</p>
-                <button class="ecp-load-lazy" style="padding: 8px 16px; background: #007cba; color: white; border: none; border-radius: 4px; cursor: pointer;">
-                    Jetzt laden
-                </button>
-            </div>
-        </div>
+        // Remove whitespace
+        $css = str_replace(array("\r\n", "\r", "\n", "\t", '  ', '    ', '    '), '', $css);
 
-        <script>
-            document.getElementById('<?php echo esc_js($placeholder_id); ?>').addEventListener('click', function() {
-                this.innerHTML = '<div style="text-align: center; padding: 40px;">Lädt...</div>';
-
-                fetch('<?php echo admin_url('admin-ajax.php'); ?>', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/x-www-form-urlencoded'
-                        },
-                        body: 'action=ecp_load_calculator&calculator_id=<?php echo $calculator->id; ?>&nonce=<?php echo wp_create_nonce('ecp_lazy_load'); ?>'
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            this.outerHTML = data.data;
-                            // Kalkulator initialisieren falls jQuery verfügbar
-                            if (typeof jQuery !== 'undefined' && jQuery('.ecp-calculator').last().length) {
-                                jQuery('.ecp-calculator').last().ecpCalculator();
-                            }
-                        } else {
-                            this.innerHTML = '<div style="color: red; text-align: center; padding: 20px;">Fehler beim Laden</div>';
-                        }
-                    });
-            });
-        </script>
-<?php
-
-        return ob_get_clean();
+        return $css;
     }
 }
 
 /**
- * Performance-Manager initialisieren
+ * Initialize performance system
  */
-function ecp_init_performance_manager()
+function ecp_init_performance()
 {
     global $ecp_performance;
-    $ecp_performance = new ECP_Performance_Manager();
+    $ecp_performance = new ECP_Performance();
     return $ecp_performance;
 }
 
-// Performance-Manager starten
-add_action('plugins_loaded', 'ecp_init_performance_manager', 5);
+// Start performance monitoring early
+add_action('plugins_loaded', 'ecp_init_performance', 5);

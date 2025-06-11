@@ -4,7 +4,7 @@
  * Plugin Name: Excel Calculator Pro
  * Plugin URI: https://samuelbaer.ch/
  * Description: Excel-ähnliche Kalkulatoren mit Echtzeit-Berechnung und Formelunterstützung
- * Version: 3.6.8
+ * Version: 3.7.0
  * Author: Samuel Baer
  * License: GPL v2 or later
  * Text Domain: excel-calculator-pro
