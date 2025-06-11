@@ -11,7 +11,6 @@ if (!defined('ABSPATH')) {
 class ECP_Database
 {
     private $table_calculators;
-    private $table_templates;
     private $cache_group = 'ecp_calculators';
     private $cache_time = 3600; // 1 hour
 
@@ -19,7 +18,6 @@ class ECP_Database
     {
         global $wpdb;
         $this->table_calculators = $wpdb->prefix . 'excel_calculators';
-        $this->table_templates = $wpdb->prefix . 'excel_calculator_templates';
 
         add_action('plugins_loaded', array($this, 'maybe_upgrade_database'), 20);
     }
@@ -63,32 +61,9 @@ class ECP_Database
             KEY created_by (created_by)
         ) $charset_collate;";
 
-        // Templates table
-        $sql_templates = "CREATE TABLE {$this->table_templates} (
-            id mediumint(9) NOT NULL AUTO_INCREMENT,
-            name varchar(255) NOT NULL,
-            description text,
-            category varchar(100) DEFAULT 'general',
-            fields longtext NOT NULL,
-            formulas longtext NOT NULL,
-            settings longtext,
-            is_public tinyint(1) DEFAULT 0,
-            sort_order int(11) DEFAULT 0,
-            created_at datetime DEFAULT CURRENT_TIMESTAMP,
-            PRIMARY KEY (id),
-            KEY category (category),
-            KEY is_public (is_public)
-        ) $charset_collate;";
-
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
         dbDelta($sql_calculators);
-        dbDelta($sql_templates);
-
-        // Create default templates if none exist
-        if ($this->get_templates_count() === 0) {
-            $this->create_default_templates();
-        }
 
         return !$wpdb->last_error;
     }
@@ -262,79 +237,6 @@ class ECP_Database
     }
 
     /**
-     * Get templates
-     */
-    public function get_templates($category = null)
-    {
-        global $wpdb;
-
-        $cache_key = 'templates_' . ($category ?: 'all');
-        $templates = wp_cache_get($cache_key, $this->cache_group);
-
-        if ($templates === false) {
-            $where = "WHERE is_public = 1";
-            $query_args = array();
-
-            if ($category) {
-                $where .= " AND category = %s";
-                $query_args[] = $category;
-            }
-
-            $sql = "SELECT * FROM {$this->table_templates} {$where} ORDER BY sort_order ASC, name ASC";
-            $templates = $wpdb->get_results(
-                empty($query_args) ? $sql : $wpdb->prepare($sql, $query_args)
-            );
-
-            // Decode JSON fields
-            foreach ($templates as $template) {
-                $template->fields = json_decode($template->fields, true) ?: array();
-                $template->formulas = json_decode($template->formulas, true) ?: array();
-                $template->settings = json_decode($template->settings, true) ?: array();
-            }
-
-            wp_cache_set($cache_key, $templates, $this->cache_group, $this->cache_time);
-        }
-
-        return $templates;
-    }
-
-    /**
-     * Get templates count
-     */
-    public function get_templates_count()
-    {
-        global $wpdb;
-        return (int) $wpdb->get_var("SELECT COUNT(*) FROM {$this->table_templates}");
-    }
-
-    /**
-     * Create calculator from template
-     */
-    public function create_from_template($template_id, $name)
-    {
-        global $wpdb;
-
-        $template = $wpdb->get_row($wpdb->prepare(
-            "SELECT * FROM {$this->table_templates} WHERE id = %d",
-            intval($template_id)
-        ));
-
-        if (!$template) {
-            return false;
-        }
-
-        $calculator_data = array(
-            'name' => sanitize_text_field($name),
-            'description' => $template->description ?: '',
-            'fields' => json_decode($template->fields, true) ?: array(),
-            'formulas' => json_decode($template->formulas, true) ?: array(),
-            'settings' => json_decode($template->settings, true) ?: array()
-        );
-
-        return $this->save_calculator($calculator_data);
-    }
-
-    /**
      * Export calculator
      */
     public function export_calculator($id)
@@ -372,128 +274,6 @@ class ECP_Database
     }
 
     /**
-     * Create default templates
-     */
-    private function create_default_templates()
-    {
-        $templates = array(
-            array(
-                'name' => 'Kreditrechner',
-                'description' => 'Berechnet monatliche Raten für Kredite',
-                'category' => 'financial',
-                'fields' => array(
-                    array(
-                        'id' => 'kreditsumme',
-                        'label' => 'Kreditsumme',
-                        'type' => 'number',
-                        'default' => '10000',
-                        'min' => '1000',
-                        'max' => '1000000',
-                        'unit' => 'CHF'
-                    ),
-                    array(
-                        'id' => 'zinssatz',
-                        'label' => 'Zinssatz (%)',
-                        'type' => 'number',
-                        'default' => '3.5',
-                        'min' => '0.1',
-                        'max' => '15',
-                        'step' => '0.1',
-                        'unit' => '%'
-                    ),
-                    array(
-                        'id' => 'laufzeit',
-                        'label' => 'Laufzeit (Jahre)',
-                        'type' => 'number',
-                        'default' => '5',
-                        'min' => '1',
-                        'max' => '30',
-                        'unit' => 'Jahre'
-                    )
-                ),
-                'formulas' => array(
-                    array(
-                        'label' => 'Monatliche Rate',
-                        'formula' => 'RUNDEN((kreditsumme * (zinssatz/100/12) * POW(1 + zinssatz/100/12, laufzeit*12)) / (POW(1 + zinssatz/100/12, laufzeit*12) - 1), 2)',
-                        'format' => 'currency'
-                    )
-                ),
-                'is_public' => 1,
-                'sort_order' => 1
-            ),
-            array(
-                'name' => 'BMI-Rechner',
-                'description' => 'Body Mass Index berechnen',
-                'category' => 'health',
-                'fields' => array(
-                    array(
-                        'id' => 'gewicht',
-                        'label' => 'Gewicht',
-                        'type' => 'number',
-                        'default' => '70',
-                        'min' => '20',
-                        'max' => '300',
-                        'unit' => 'kg'
-                    ),
-                    array(
-                        'id' => 'groesse',
-                        'label' => 'Grösse',
-                        'type' => 'number',
-                        'default' => '175',
-                        'min' => '100',
-                        'max' => '250',
-                        'unit' => 'cm'
-                    )
-                ),
-                'formulas' => array(
-                    array(
-                        'label' => 'BMI',
-                        'formula' => 'RUNDEN(gewicht / POW(groesse/100, 2), 1)',
-                        'format' => ''
-                    )
-                ),
-                'is_public' => 1,
-                'sort_order' => 2
-            )
-        );
-
-        foreach ($templates as $template) {
-            $this->insert_template($template);
-        }
-    }
-
-    /**
-     * Insert template
-     */
-    private function insert_template($data)
-    {
-        global $wpdb;
-
-        if (empty($data['name'])) {
-            return false;
-        }
-
-        $template_data = array(
-            'name' => sanitize_text_field($data['name']),
-            'description' => sanitize_textarea_field($data['description'] ?? ''),
-            'category' => sanitize_text_field($data['category'] ?? 'general'),
-            'fields' => wp_json_encode($data['fields']),
-            'formulas' => wp_json_encode($data['formulas']),
-            'settings' => wp_json_encode($data['settings'] ?? array()),
-            'is_public' => intval($data['is_public'] ?? 0),
-            'sort_order' => intval($data['sort_order'] ?? 0)
-        );
-
-        $result = $wpdb->insert(
-            $this->table_templates,
-            $template_data,
-            array('%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d')
-        );
-
-        return $result ? $wpdb->insert_id : false;
-    }
-
-    /**
      * Clear cache
      */
     private function clear_cache($calculator_id = null)
@@ -517,10 +297,6 @@ class ECP_Database
 
         $stats['total_calculators'] = (int) $wpdb->get_var(
             "SELECT COUNT(*) FROM {$this->table_calculators} WHERE status = 'active'"
-        );
-
-        $stats['total_templates'] = (int) $wpdb->get_var(
-            "SELECT COUNT(*) FROM {$this->table_templates} WHERE is_public = 1"
         );
 
         $stats['recent_calculators'] = $wpdb->get_results(

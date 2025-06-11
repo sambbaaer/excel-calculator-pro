@@ -56,7 +56,7 @@ class ECP_Shortcode
         }
 
         // Kalkulator laden
-        $calculator = $this->get_database()->get_calculator(intval($atts['id'])); // Verwende get_database()
+        $calculator = $this->get_database()->get_calculator(intval($atts['id']));
 
         if (!$calculator) {
             return $this->error_message(__('Fehler: Kalkulator nicht gefunden', 'excel-calculator-pro'));
@@ -128,8 +128,6 @@ class ECP_Shortcode
         }
 
         if ($atts['title'] === 'auto' && empty($calculator->name)) {
-            // Wenn Titel auf Auto steht und kein Name im Kalkulator hinterlegt ist,
-            // und die Beschreibung auch versteckt ist oder leer, dann keinen Header.
             if (($atts['description'] === 'hide') || ($atts['description'] === 'auto' && empty($calculator->description))) {
                 return false;
             }
@@ -171,7 +169,7 @@ class ECP_Shortcode
 
                 if ($atts['title'] === 'auto') {
                     $title = $calculator->name;
-                } elseif (!empty($atts['title']) && $atts['title'] !== 'auto') { // Stelle sicher, dass 'auto' nicht als Custom Titel interpretiert wird
+                } elseif (!empty($atts['title']) && $atts['title'] !== 'auto') {
                     $title = $atts['title'];
                 }
 
@@ -186,12 +184,12 @@ class ECP_Shortcode
 
                 if ($atts['description'] === 'auto') {
                     $description = $calculator->description;
-                } elseif (!empty($atts['description']) && $atts['description'] !== 'auto') { // Stelle sicher, dass 'auto' nicht als Custom Beschreibung interpretiert wird
+                } elseif (!empty($atts['description']) && $atts['description'] !== 'auto') {
                     $description = $atts['description'];
                 }
 
                 if (!empty($description)) {
-                    echo '<p class="ecp-calculator-description">' . wp_kses_post($description) . '</p>'; // wp_kses_post für erlaubtes HTML
+                    echo '<p class="ecp-calculator-description">' . wp_kses_post($description) . '</p>';
                 }
             }
             ?>
@@ -209,35 +207,23 @@ class ECP_Shortcode
             <h4 class="ecp-section-title"><?php _e('Eingaben', 'excel-calculator-pro'); ?></h4>
 
             <?php foreach ($fields as $field): ?>
-                <?php if (!is_array($field) || empty($field['id']) || empty($field['label'])) continue; // Skip invalid field data 
-                ?>
+                <?php if (!is_array($field) || empty($field['id']) || empty($field['label'])) continue; ?>
                 <div class="ecp-field-group" data-field-id="<?php echo esc_attr($field['id']); ?>">
                     <label for="ecp-field-<?php echo esc_attr($field['id']); ?>">
                         <?php echo esc_html($field['label']); ?>
-                        <?php /* MODIFIZIERT: Pflichtfeld-Stern entfernt
-                        <?php if (isset($field['required']) && $field['required']): ?>
-                            <span class="ecp-required">*</span>
-                        <?php endif; ?>
-                        */ ?>
                     </label>
 
                     <div class="ecp-input-wrapper">
-                        <?php // MODIFIZIERT: Hilfetext hier platziert 
-                        ?>
                         <?php if (isset($field['help']) && !empty($field['help'])): ?>
                             <span class="ecp-field-help-prefix"><?php echo esc_html($field['help']); ?></span>
                         <?php endif; ?>
 
                         <?php
                         $input_type = isset($field['type']) ? $field['type'] : 'number';
-                        // Für 'number' type, fallback auf 'text', wenn 'step' 'any' ist, um Kompatibilität zu verbessern
-                        if ($input_type === 'number' && isset($field['step']) && $field['step'] === 'any') {
-                            // $input_type = 'text'; // Optionale Änderung für bessere Browser-Kompatibilität mit 'any'
-                        }
                         $default_value = isset($field['default']) ? $field['default'] : '';
                         $min = isset($field['min']) && is_numeric($field['min']) ? $field['min'] : '';
                         $max = isset($field['max']) && is_numeric($field['max']) ? $field['max'] : '';
-                        $step = isset($field['step']) ? $field['step'] : ($input_type === 'number' ? 'any' : ''); // Default 'any' für number
+                        $step = isset($field['step']) ? $field['step'] : ($input_type === 'number' ? 'any' : '');
                         $placeholder = isset($field['placeholder']) ? $field['placeholder'] : '';
                         ?>
 
@@ -249,20 +235,12 @@ class ECP_Shortcode
                             <?php if ($input_type === 'number' && $min !== ''): ?>min="<?php echo esc_attr($min); ?>" <?php endif; ?>
                             <?php if ($input_type === 'number' && $max !== ''): ?>max="<?php echo esc_attr($max); ?>" <?php endif; ?>
                             <?php if ($input_type === 'number' && $step !== ''): ?>step="<?php echo esc_attr($step); ?>" <?php endif; ?>
-                            <?php if (!empty($placeholder)): ?>placeholder="<?php echo esc_attr($placeholder); ?>" <?php endif; ?>
-                            <?php /* MODIFIZIERT: required Attribut entfernt
-                               <?php if (isset($field['required']) && $field['required']): ?>required<?php endif; ?>
-                               */ ?> />
+                            <?php if (!empty($placeholder)): ?>placeholder="<?php echo esc_attr($placeholder); ?>" <?php endif; ?> />
 
                         <?php if (isset($field['unit']) && !empty($field['unit'])): ?>
                             <span class="ecp-input-unit"><?php echo esc_html($field['unit']); ?></span>
                         <?php endif; ?>
                     </div>
-                    <?php /* MODIFIZIERT: Ursprüngliche Hilfetext-Position entfernt
-                    <?php if (isset($field['help']) && !empty($field['help'])): ?>
-                        <div class="ecp-field-help"><?php echo esc_html($field['help']); ?></div>
-                    <?php endif; ?>
-                    */ ?>
                 </div>
             <?php endforeach; ?>
         </div>
@@ -279,8 +257,7 @@ class ECP_Shortcode
             <h4 class="ecp-section-title"><?php _e('Ergebnisse', 'excel-calculator-pro'); ?></h4>
 
             <?php foreach ($formulas as $index => $formula): ?>
-                <?php if (!is_array($formula) || empty($formula['label'])) continue; // Skip invalid formula data 
-                ?>
+                <?php if (!is_array($formula) || empty($formula['label'])) continue; ?>
                 <div class="ecp-output-group" data-output-id="<?php echo esc_attr($index); ?>">
                     <label>
                         <?php echo esc_html($formula['label']); ?>
@@ -291,7 +268,7 @@ class ECP_Shortcode
 
                     <div class="ecp-output-wrapper">
                         <span class="ecp-output-field"
-                            data-formula="<?php echo esc_attr($formula['formula']); ?>"
+                            data-formula="<?php echo esc_attr($formula['formula'] ?? ''); ?>"
                             data-format="<?php echo esc_attr($formula['format'] ?? ''); ?>"
                             data-output-id="<?php echo esc_attr($index); ?>">
                             0
@@ -300,14 +277,12 @@ class ECP_Shortcode
                         <?php if (isset($formula['unit']) && !empty($formula['unit'])): ?>
                             <span class="ecp-output-unit"><?php echo esc_html($formula['unit']); ?></span>
                         <?php endif; ?>
-                        <?php // MODIFIZIERT: Kopier-Icon hinzugefügt 
-                        ?>
+
                         <span class="ecp-copy-icon" title="<?php esc_attr_e('Kopieren', 'excel-calculator-pro'); ?>" role="button" tabindex="0">📋</span>
                     </div>
 
                     <?php if (defined('WP_DEBUG') && WP_DEBUG && current_user_can('manage_options')): ?>
-                        <?php if (!empty($formula['formula'])): // Nur anzeigen, wenn Formel vorhanden 
-                        ?>
+                        <?php if (!empty($formula['formula'])): ?>
                             <div class="ecp-formula-debug">
                                 <?php echo esc_html($formula['formula']); ?>
                             </div>
@@ -370,7 +345,7 @@ class ECP_Shortcode
      */
     public function tinymce_localization()
     {
-        if (!$this->database) { // Sicherstellen, dass DB-Objekt existiert
+        if (!$this->database) {
             $this->database = new ECP_Database();
         }
         $calculators = $this->database->get_calculators();
@@ -385,16 +360,11 @@ class ECP_Shortcode
             }
         }
 
-        // Sicherstellen, dass das Script 'editor' oder ein passendes Handle existiert, bevor wp_localize_script aufgerufen wird.
-        // Normalerweise wird dies durch den TinyMCE-Editor selbst oder ein anderes Plugin gehandhabt.
-        // Wenn 'editor' nicht zuverlässig ist, könnte man es an das eigene TinyMCE-Plugin-Skript binden.
-        // Für dieses Beispiel wird angenommen, dass 'editor' verfügbar ist, wenn TinyMCE geladen wird.
-        // Alternativ: wp_localize_script('ecp-tinymce-plugin-script-handle', ...);
-        wp_localize_script('editor', 'ecp_tinymce_data', array( // Geändert zu ecp_tinymce_data um Konflikte zu vermeiden
+        wp_localize_script('editor', 'ecp_tinymce_data', array(
             'title' => __('Excel Calculator Pro einfügen', 'excel-calculator-pro'),
             'calculators' => $calculator_options,
             'no_calculators' => __('Keine Kalkulatoren verfügbar', 'excel-calculator-pro'),
-            'nonce' => wp_create_nonce('ecp_tinymce_nonce') // Nonce für AJAX-Aufruf
+            'nonce' => wp_create_nonce('ecp_tinymce_nonce')
         ));
     }
 }

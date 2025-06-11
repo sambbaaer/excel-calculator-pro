@@ -32,7 +32,6 @@ class ECP_Admin
             'save_calculator',
             'delete_calculator',
             'get_calculator',
-            'create_from_template',
             'export_calculator',
             'import_calculator',
             'get_calculators_for_tinymce'
@@ -107,6 +106,11 @@ class ECP_Admin
             'new_calculator' => __('Neuer Kalkulator', 'excel-calculator-pro'),
             'edit_calculator' => __('Kalkulator bearbeiten', 'excel-calculator-pro'),
             'duplicate_calculator' => __('Kalkulator duplizieren', 'excel-calculator-pro'),
+
+            // Import/Export
+            'export_success' => __('Kalkulator erfolgreich exportiert.', 'excel-calculator-pro'),
+            'import_success' => __('Kalkulator erfolgreich importiert.', 'excel-calculator-pro'),
+            'import_error' => __('Fehler beim Importieren der Datei.', 'excel-calculator-pro'),
         );
     }
 
@@ -150,10 +154,6 @@ class ECP_Admin
                 'title' => __('Kalkulatoren', 'excel-calculator-pro'),
                 'icon' => 'dashicons-list-view'
             ),
-            'templates' => array(
-                'title' => __('Vorlagen', 'excel-calculator-pro'),
-                'icon' => 'dashicons-layout'
-            ),
             'import-export' => array(
                 'title' => __('Import/Export', 'excel-calculator-pro'),
                 'icon' => 'dashicons-upload'
@@ -182,9 +182,6 @@ class ECP_Admin
         echo '<div class="ecp-tab-content">';
 
         switch ($current_tab) {
-            case 'templates':
-                $this->templates_tab();
-                break;
             case 'import-export':
                 $this->import_export_tab();
                 break;
@@ -209,6 +206,56 @@ class ECP_Admin
 
             <div id="ecp-calculator-editor" style="display: none;">
                 <?php $this->render_calculator_editor(); ?>
+            </div>
+        </div>
+    <?php
+    }
+
+    private function import_export_tab()
+    {
+    ?>
+        <div class="ecp-settings-container">
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+                <!-- Export Bereich -->
+                <div>
+                    <h3><?php _e('Kalkulator exportieren', 'excel-calculator-pro'); ?></h3>
+                    <p><?php _e('Exportieren Sie einen Kalkulator als JSON-Datei für Backup oder Transfer.', 'excel-calculator-pro'); ?></p>
+
+                    <div class="ecp-form-group">
+                        <label for="export-calculator-select"><?php _e('Kalkulator auswählen:', 'excel-calculator-pro'); ?></label>
+                        <select id="export-calculator-select" class="regular-text">
+                            <option value=""><?php _e('-- Bitte wählen --', 'excel-calculator-pro'); ?></option>
+                            <?php
+                            $calculators = $this->database->get_calculators();
+                            foreach ($calculators as $calc) {
+                                echo '<option value="' . esc_attr($calc->id) . '">' . esc_html($calc->name) . '</option>';
+                            }
+                            ?>
+                        </select>
+                    </div>
+
+                    <button id="ecp-export-calculator" class="button button-primary">
+                        <span class="dashicons dashicons-download"></span>
+                        <?php _e('Exportieren', 'excel-calculator-pro'); ?>
+                    </button>
+                </div>
+
+                <!-- Import Bereich -->
+                <div>
+                    <h3><?php _e('Kalkulator importieren', 'excel-calculator-pro'); ?></h3>
+                    <p><?php _e('Importieren Sie einen Kalkulator aus einer JSON-Datei.', 'excel-calculator-pro'); ?></p>
+
+                    <div class="ecp-form-group">
+                        <label for="import-file"><?php _e('JSON-Datei auswählen:', 'excel-calculator-pro'); ?></label>
+                        <input type="file" id="import-file" accept=".json" />
+                        <p class="description"><?php _e('Nur JSON-Dateien sind erlaubt (max. 1MB)', 'excel-calculator-pro'); ?></p>
+                    </div>
+
+                    <button id="ecp-import-calculator" class="button button-primary" disabled>
+                        <span class="dashicons dashicons-upload"></span>
+                        <?php _e('Importieren', 'excel-calculator-pro'); ?>
+                    </button>
+                </div>
             </div>
         </div>
     <?php
@@ -299,7 +346,7 @@ class ECP_Admin
                 <span class="dashicons dashicons-calculator"></span>
             </div>
             <h3><?php _e('Noch keine Kalkulatoren', 'excel-calculator-pro'); ?></h3>
-            <p><?php _e('Erstellen Sie Ihren ersten Kalkulator oder verwenden Sie eine Vorlage.', 'excel-calculator-pro'); ?></p>
+            <p><?php _e('Erstellen Sie Ihren ersten Kalkulator.', 'excel-calculator-pro'); ?></p>
             <button id="ecp-new-calculator-empty" class="button button-primary">
                 <?php _e('Ersten Kalkulator erstellen', 'excel-calculator-pro'); ?>
             </button>
@@ -402,7 +449,7 @@ class ECP_Admin
         $this->settings_manager->register_settings();
     }
 
-    // AJAX Handlers (simplified and improved error handling)
+    // AJAX Handlers
     public function ajax_save_calculator()
     {
         $this->verify_admin_access();
@@ -455,6 +502,108 @@ class ECP_Admin
         }
     }
 
+    public function ajax_export_calculator()
+    {
+        $this->verify_admin_access();
+
+        $calculator_id = intval($_POST['calculator_id'] ?? 0);
+
+        if ($calculator_id <= 0) {
+            wp_send_json_error(array('message' => __('Ungültige Kalkulator-ID.', 'excel-calculator-pro')));
+        }
+
+        $export_data = $this->database->export_calculator($calculator_id);
+
+        if ($export_data) {
+            wp_send_json_success(array(
+                'data' => $export_data,
+                'filename' => sanitize_file_name($export_data['name']) . '_export.json',
+                'message' => __('Export erfolgreich erstellt.', 'excel-calculator-pro')
+            ));
+        } else {
+            wp_send_json_error(array('message' => __('Fehler beim Exportieren.', 'excel-calculator-pro')));
+        }
+    }
+
+    public function ajax_import_calculator()
+    {
+        $this->verify_admin_access();
+
+        if (!isset($_FILES['import_file'])) {
+            wp_send_json_error(array('message' => __('Keine Datei hochgeladen.', 'excel-calculator-pro')));
+        }
+
+        $file = $_FILES['import_file'];
+
+        // Datei-Validierung
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            wp_send_json_error(array('message' => __('Fehler beim Datei-Upload.', 'excel-calculator-pro')));
+        }
+
+        if ($file['size'] > 1048576) { // 1MB
+            wp_send_json_error(array('message' => __('Datei ist zu groß (max. 1MB).', 'excel-calculator-pro')));
+        }
+
+        $allowed_types = array('application/json', 'text/plain');
+        if (!in_array($file['type'], $allowed_types)) {
+            wp_send_json_error(array('message' => __('Nur JSON-Dateien sind erlaubt.', 'excel-calculator-pro')));
+        }
+
+        // Datei-Inhalt lesen und validieren
+        $content = file_get_contents($file['tmp_name']);
+        if (!$content) {
+            wp_send_json_error(array('message' => __('Datei konnte nicht gelesen werden.', 'excel-calculator-pro')));
+        }
+
+        $import_data = json_decode($content, true);
+        if (json_last_error() !== JSON_ERROR_NONE) {
+            wp_send_json_error(array('message' => __('Ungültiges JSON-Format.', 'excel-calculator-pro')));
+        }
+
+        // Struktur validieren
+        $required_fields = array('name', 'fields', 'formulas');
+        foreach ($required_fields as $field) {
+            if (!isset($import_data[$field])) {
+                wp_send_json_error(array('message' => sprintf(__('Erforderliches Feld "%s" fehlt.', 'excel-calculator-pro'), $field)));
+            }
+        }
+
+        // Import durchführen
+        try {
+            $result_id = $this->database->import_calculator($import_data);
+
+            if ($result_id) {
+                wp_send_json_success(array(
+                    'id' => $result_id,
+                    'message' => __('Kalkulator erfolgreich importiert.', 'excel-calculator-pro')
+                ));
+            } else {
+                wp_send_json_error(array('message' => __('Fehler beim Importieren.', 'excel-calculator-pro')));
+            }
+        } catch (Exception $e) {
+            wp_send_json_error(array('message' => $e->getMessage()));
+        }
+    }
+
+    public function ajax_get_calculators_for_tinymce()
+    {
+        if (!check_ajax_referer('ecp_tinymce_nonce', 'nonce', false)) {
+            wp_send_json_error(array('message' => __('Sicherheitsprüfung fehlgeschlagen.', 'excel-calculator-pro')));
+        }
+
+        $calculators = $this->database->get_calculators();
+        $result = array();
+
+        foreach ($calculators as $calc) {
+            $result[] = array(
+                'id' => $calc->id,
+                'name' => $calc->name
+            );
+        }
+
+        wp_send_json_success($result);
+    }
+
     // Utility methods
     private function verify_admin_access()
     {
@@ -470,7 +619,7 @@ class ECP_Admin
     private function sanitize_calculator_data($data)
     {
         return array(
-            'id' => intval($data['calculator_id'] ?? 0),
+            'id' => intval($data['id'] ?? 0),
             'name' => sanitize_text_field($data['name'] ?? ''),
             'description' => sanitize_textarea_field($data['description'] ?? ''),
             'fields' => $this->sanitize_fields($data['fields'] ?? array()),
@@ -564,8 +713,6 @@ class ECP_Admin
 
         return $sanitized;
     }
-
-    // Additional AJAX handlers for templates and import/export would go here...
 }
 
 /**

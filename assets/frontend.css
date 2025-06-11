@@ -624,4 +624,97 @@
     /* Debug styles */
 }
 
-/* Custom Scrollbar (optional, unverändert) */
+/* ==========================================================================
+   Verbesserungen für Einheiten-Darstellung (Ergänzung zur bestehenden CSS)
+   ========================================================================== */
+
+/* Bessere Spacing für Input-Einheiten */
+.ecp-input-unit {
+    color: var(--ecp-text-light);
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    margin-left: 8px;
+    /* Konsistenter Abstand */
+    padding: 0 5px;
+    transition: color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* Bessere Spacing für Output-Einheiten */
+.ecp-output-unit {
+    color: var(--ecp-text-light);
+    font-weight: 500;
+    font-size: 14px;
+    white-space: nowrap;
+    margin-left: 8px;
+    /* Konsistenter Abstand */
+    padding: 0 5px;
+    transition: color 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    opacity: 0.8;
+}
+
+/* Hover-Effekte für Einheiten */
+.ecp-field-group:hover .ecp-input-unit,
+.ecp-output-group:hover .ecp-output-unit {
+    opacity: 1;
+    color: var(--ecp-primary-color);
+}
+
+/* Bessere Anordnung im Output-Wrapper */
+.ecp-output-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Konsistenter Gap zwischen allen Elementen */
+    flex-basis: calc(100% - 220px);
+    flex-grow: 2;
+    min-width: 180px;
+    justify-content: flex-end;
+}
+
+/* Bessere Anordnung im Input-Wrapper */
+.ecp-input-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    /* Konsistenter Gap zwischen allen Elementen */
+    flex-basis: calc(100% - 220px);
+    flex-grow: 2;
+    min-width: 180px;
+}
+
+/* Spezielle Styling für Einheiten neben Währungsformaten */
+.ecp-output-field[data-format="currency"]+.ecp-output-unit {
+    opacity: 0.6;
+    /* Weniger prominent, da Währung bereits im Wert enthalten */
+    font-size: 12px;
+}
+
+/* Spezielle Styling für Einheiten neben Prozentformaten */
+.ecp-output-field[data-format="percentage"]+.ecp-output-unit {
+    opacity: 0.6;
+    /* Weniger prominent, da % bereits im Wert enthalten */
+    font-size: 12px;
+}
+
+/* Responsive Verbesserungen für Einheiten */
+@media (max-width: 768px) {
+
+    .ecp-input-unit,
+    .ecp-output-unit {
+        font-size: 13px;
+        margin-left: 6px;
+        padding: 0 3px;
+    }
+
+    .ecp-input-wrapper,
+    .ecp-output-wrapper {
+        gap: 6px;
+        flex-wrap: wrap;
+        /* Erlaubt Umbruch bei sehr kleinen Screens */
+    }
+}

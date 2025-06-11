@@ -4,7 +4,7 @@
  * Plugin Name: Excel Calculator Pro
  * Plugin URI: https://samuelbaer.ch/
  * Description: Excel-ähnliche Kalkulatoren mit Echtzeit-Berechnung und Formelunterstützung
- * Version: 3.7.0
+ * Version: 3.8.0
  * Author: Samuel Baer
  * License: GPL v2 or later
  * Text Domain: excel-calculator-pro
@@ -21,7 +21,7 @@ if (!defined('ABSPATH')) {
 // Plugin-Konstanten definieren
 define('ECP_PLUGIN_URL', plugin_dir_url(__FILE__));
 define('ECP_PLUGIN_PATH', plugin_dir_path(__FILE__));
-define('ECP_VERSION', '2.0.0');
+define('ECP_VERSION', '3.8.0');
 define('ECP_MIN_PHP_VERSION', '7.4');
 define('ECP_MIN_WP_VERSION', '5.0');
 
@@ -262,15 +262,14 @@ class ExcelCalculatorPro
         $table_name = $wpdb->prefix . 'excel_calculators';
         $wpdb->query("DROP TABLE IF EXISTS $table_name");
 
-        $table_templates = $wpdb->prefix . 'excel_calculator_templates';
-        $wpdb->query("DROP TABLE IF EXISTS $table_templates");
-
         // Optionen löschen
         $options = array(
             'ecp_version',
             'ecp_general_settings',
+            'ecp_color_settings',
             'ecp_activation_date',
-            'ecp_delete_data_on_uninstall'
+            'ecp_delete_data_on_uninstall',
+            'ecp_db_version'
         );
 
         foreach ($options as $option) {
