@@ -12,8 +12,8 @@
 }
 
 /* ==========================================================================
-      Hauptcontainer
-      ========================================================================== */
+         Hauptcontainer
+         ========================================================================== */
 .ecp-calculator {
     /* Breite und Margins werden jetzt über CSS-Variablen aus PHP gesteuert */
     max-width: var(--ecp-calculator-global-max-width, 100%);
@@ -56,17 +56,19 @@
     0% {
         background-position: 0% 50%;
     }
+
     50% {
         background-position: 100% 50%;
     }
+
     100% {
         background-position: 0% 50%;
     }
 }
 
 /* ==========================================================================
-      Header-Bereich
-      ========================================================================== */
+         Header-Bereich
+         ========================================================================== */
 .ecp-calculator-header {
     margin-bottom: 30px;
     text-align: center;
@@ -105,8 +107,8 @@
 }
 
 /* ==========================================================================
-      Sektionen
-      ========================================================================== */
+         Sektionen
+         ========================================================================== */
 .ecp-section {
     margin-bottom: 35px;
     position: relative;
@@ -150,8 +152,8 @@
 }
 
 /* ==========================================================================
-      Eingabefelder
-      ========================================================================== */
+         Eingabefelder
+         ========================================================================== */
 .ecp-field-group {
     margin-bottom: 20px;
     /* Etwas weniger Margin */
@@ -264,7 +266,7 @@
     font-size: 12px;
     white-space: nowrap;
     z-index: 10;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
 
@@ -341,8 +343,8 @@
 
 
 /* ==========================================================================
-      Ausgabefelder
-      ========================================================================== */
+         Ausgabefelder
+         ========================================================================== */
 .ecp-output-group {
     margin-bottom: 20px;
     display: flex;
@@ -439,11 +441,13 @@
         transform: scale(1);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
     }
+
     30% {
         transform: scale(1.05);
         box-shadow: 0 4px 12px rgba(var(--ecp-primary-color-rgb, 0, 124, 186), 0.2);
         /* RGB-Variable für Schatten */
     }
+
     100% {
         transform: scale(1);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
@@ -460,16 +464,19 @@
 }
 
 @keyframes ecpPulseAndGlowDark {
+
     /* Beispiel für Darkmode-Animation, falls benötigt */
     0% {
         transform: scale(1);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
     }
+
     30% {
         transform: scale(1.05);
         box-shadow: 0 4px 12px rgba(var(--ecp-secondary-color-rgb, 0, 160, 210), 0.3);
         /* RGB-Variable für Schatten */
     }
+
     100% {
         transform: scale(1);
         box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
@@ -507,7 +514,8 @@
 .ecp-copy-icon:hover {
     opacity: 1;
     transform: scale(1.1);
-    background-color: rgba(var(--ecp-primary-color-rgb, 0,124,186), 0.1); /* Leichter Hover-Hintergrund */
+    background-color: rgba(var(--ecp-primary-color-rgb, 0, 124, 186), 0.1);
+    /* Leichter Hover-Hintergrund */
 }
 
 .ecp-copy-icon.ecp-copied-feedback {
@@ -515,14 +523,16 @@
     opacity: 1;
     transform: scale(1.05);
 }
+
 .ecp-copy-icon.ecp-copied-feedback:hover {
-    background-color: transparent; /* Kein Hover-Effekt während Feedback */
+    background-color: transparent;
+    /* Kein Hover-Effekt während Feedback */
 }
 
 
 /* ==========================================================================
-      Responsive Design
-      ========================================================================== */
+         Responsive Design
+         ========================================================================== */
 @media (max-width: 768px) {
     .ecp-calculator {
         padding: 20px 15px;
@@ -566,7 +576,8 @@
     }
 
     .ecp-error-message {
-        padding-left: 0; /* Keine Einrückung auf Mobilgeräten */
+        padding-left: 0;
+        /* Keine Einrückung auf Mobilgeräten */
     }
 }
 
@@ -588,12 +599,29 @@
 }
 
 /* ==========================================================================
-      Weitere Hilfs- und Utility-Klassen (unverändert)
-      ========================================================================== */
-.ecp-sr-only { /* Screen-reader only */ }
-@media (prefers-reduced-motion: reduce) { /* Reduced motion */ }
-.ecp-loading, .ecp-loading::after, @keyframes ecpSpin { /* Loading spinner */ }
-.ecp-calculator.ecp-error, .ecp-calculator.ecp-success { /* Error/Success states */ }
-.ecp-debug .ecp-formula-debug { /* Debug styles */ }
-/* Custom Scrollbar (optional, unverändert) */
+         Weitere Hilfs- und Utility-Klassen (unverändert)
+         ========================================================================== */
+.ecp-sr-only {
+    /* Screen-reader only */
+}
 
+@media (prefers-reduced-motion: reduce) {
+    /* Reduced motion */
+}
+
+.ecp-loading,
+.ecp-loading::after,
+@keyframes ecpSpin {
+    /* Loading spinner */
+}
+
+.ecp-calculator.ecp-error,
+.ecp-calculator.ecp-success {
+    /* Error/Success states */
+}
+
+.ecp-debug .ecp-formula-debug {
+    /* Debug styles */
+}
+
+/* Custom Scrollbar (optional, unverändert) */

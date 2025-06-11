@@ -396,7 +396,7 @@ class ECP_Admin
     public function admin_page()
     {
         $current_tab = isset($_GET['tab']) ? sanitize_text_field($_GET['tab']) : 'calculators';
-    ?>
+?>
         <div class="wrap ecp-admin-wrap">
             <div class="ecp-admin-header">
                 <h1><span class="dashicons dashicons-calculator"></span> Excel Calculator Pro</h1>
@@ -701,7 +701,7 @@ class ECP_Admin
                 ?>
             </form>
         </div>
-    <?php
+<?php
     }
 
 
