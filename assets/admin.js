@@ -281,9 +281,9 @@
                         <div class="ecp-form-row">
                             <label>Formel:</label>
                             <textarea class="output-formula" rows="3" 
-                                      placeholder="z.B. RUNDEN(feld_1 * feld_2, 2)">${data.formula || ''}</textarea>
+                                      placeholder="z.B. RUNDEN(feld_1 * feld_2; 2)">${data.formula || ''}</textarea>
                             <small class="ecp-formula-help">
-                                Verfügbare Funktionen: WENN, RUNDEN, MIN, MAX, SUMME, MITTELWERT, OBERGRENZE, UNTERGRENZE
+                                Funktionen mit ; trennen. Z.B.: WENN(feld_1>10;1;0)
                             </small>
                         </div>
                         <div class="ecp-form-row">
@@ -346,16 +346,16 @@
             $output.find('.output-formula').on('focus', function () {
                 $(this).siblings('.ecp-formula-help').html(`
                     <strong>Verfügbare Funktionen:</strong><br>
-                    • RUNDEN(wert, dezimalstellen) - z.B. RUNDEN(feld_1, 2)<br>
-                    • OBERGRENZE(wert) / UNTERGRENZE(wert) - Auf-/Abrunden<br>
-                    • SUMME(feld_1, feld_2, ...) - Addiert alle Werte<br>
-                    • MITTELWERT(feld_1, feld_2) - Durchschnitt<br>
-                    • MIN/MAX(feld_1, feld_2) - Kleinster/Größter Wert<br>
-                    • WENN(bedingung, wert_wenn_wahr, wert_wenn_falsch)<br>
-                    • ABS(wert), SQRT(wert), POW(basis, exponent)
+                    • RUNDEN(wert; dezimalstellen)<br>
+                    • OBERGRENZE(wert) / UNTERGRENZE(wert)<br>
+                    • SUMME(feld_1; feld_2; ...)<br>
+                    • MITTELWERT(feld_1; feld_2)<br>
+                    • MIN(feld_1; feld_2) / MAX(feld_1; feld_2)<br>
+                    • WENN(bedingung; wert_wahr; wert_falsch)<br>
+                    • ABS(wert), SQRT(wert), POW(basis; exponent)
                 `);
             }).on('blur', function () {
-                $(this).siblings('.ecp-formula-help').html('Verfügbare Funktionen: WENN, RUNDEN, MIN, MAX, SUMME, MITTELWERT, OBERGRENZE, UNTERGRENZE');
+                $(this).siblings('.ecp-formula-help').html('Funktionen mit ; trennen. Z.B.: WENN(feld_1>10;1;0)');
             });
         }
 

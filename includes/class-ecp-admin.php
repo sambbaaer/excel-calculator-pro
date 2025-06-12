@@ -223,6 +223,7 @@ class ECP_Admin
     ?>
         <div class="ecp-settings-container">
             <h2><?php _e('Verfügbare Formeln und Funktionen', 'excel-calculator-pro'); ?></h2>
+            <p><?php _e('Verwenden Sie ein Semikolon (;) um Argumente in Funktionen zu trennen.', 'excel-calculator-pro'); ?></p>
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 30px; margin-top: 20px;">
 
@@ -266,7 +267,7 @@ class ECP_Admin
                             <td><?php _e('Quadratwurzel', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
-                            <td><code>POW(field_1, 2)</code></td>
+                            <td><code>POW(field_1; 2)</code></td>
                             <td><?php _e('Potenz', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
@@ -289,7 +290,7 @@ class ECP_Admin
                     <h3><span class="dashicons dashicons-format-aside"></span> <?php _e('Rundungsfunktionen', 'excel-calculator-pro'); ?></h3>
                     <table class="ecp-formula-table">
                         <tr>
-                            <td><code>RUNDEN(field_1, 2)</code></td>
+                            <td><code>RUNDEN(field_1; 2)</code></td>
                             <td><?php _e('Auf 2 Dezimalstellen runden', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
@@ -301,7 +302,7 @@ class ECP_Admin
                             <td><?php _e('Abrunden zur nächsten Ganzzahl', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
-                            <td><code>OBERGRENZE(field_1, 0.5)</code></td>
+                            <td><code>OBERGRENZE(field_1; 0.5)</code></td>
                             <td><?php _e('Aufrunden auf 0.5er-Schritte', 'excel-calculator-pro'); ?></td>
                         </tr>
                     </table>
@@ -312,19 +313,19 @@ class ECP_Admin
                     <h3><span class="dashicons dashicons-chart-bar"></span> <?php _e('Aggregationsfunktionen', 'excel-calculator-pro'); ?></h3>
                     <table class="ecp-formula-table">
                         <tr>
-                            <td><code>SUMME(field_1, field_2, field_3)</code></td>
+                            <td><code>SUMME(field_1; field_2; field_3)</code></td>
                             <td><?php _e('Summe aller Werte', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
-                            <td><code>MITTELWERT(field_1, field_2)</code></td>
+                            <td><code>MITTELWERT(field_1; field_2)</code></td>
                             <td><?php _e('Durchschnitt der Werte', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
-                            <td><code>MIN(field_1, field_2)</code></td>
+                            <td><code>MIN(field_1; field_2)</code></td>
                             <td><?php _e('Kleinster Wert', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
-                            <td><code>MAX(field_1, field_2)</code></td>
+                            <td><code>MAX(field_1; field_2)</code></td>
                             <td><?php _e('Größter Wert', 'excel-calculator-pro'); ?></td>
                         </tr>
                     </table>
@@ -335,11 +336,11 @@ class ECP_Admin
                     <h3><span class="dashicons dashicons-randomize"></span> <?php _e('Bedingte Logik', 'excel-calculator-pro'); ?></h3>
                     <table class="ecp-formula-table">
                         <tr>
-                            <td><code>WENN(field_1 > 100, field_1 * 0.1, 0)</code></td>
+                            <td><code>WENN(field_1 > 100; field_1 * 0.1; 0)</code></td>
                             <td><?php _e('Einfache Bedingung', 'excel-calculator-pro'); ?></td>
                         </tr>
                         <tr>
-                            <td><code>WENN(field_1 > 1000, 100, WENN(field_1 > 500, 50, 0))</code></td>
+                            <td><code>WENN(field_1 > 1000; 100; WENN(field_1 > 500; 50; 0))</code></td>
                             <td><?php _e('Verschachtelte Bedingung', 'excel-calculator-pro'); ?></td>
                         </tr>
                     </table>
@@ -377,25 +378,25 @@ class ECP_Admin
                     <div class="ecp-example-box">
                         <h4><?php _e('Kreditrechner', 'excel-calculator-pro'); ?></h4>
                         <p><strong><?php _e('Monatliche Rate:', 'excel-calculator-pro'); ?></strong></p>
-                        <code>RUNDEN((kreditsumme * (zinssatz/100/12) * POW(1 + zinssatz/100/12, laufzeit*12)) / (POW(1 + zinssatz/100/12, laufzeit*12) - 1), 2)</code>
+                        <code>RUNDEN((kreditsumme * (zinssatz/100/12) * POW(1 + zinssatz/100/12; laufzeit*12)) / (POW(1 + zinssatz/100/12; laufzeit*12) - 1); 2)</code>
                     </div>
 
                     <div class="ecp-example-box">
                         <h4><?php _e('Rabattrechnung', 'excel-calculator-pro'); ?></h4>
                         <p><strong><?php _e('Endpreis mit Staffelrabatt:', 'excel-calculator-pro'); ?></strong></p>
-                        <code>WENN(menge > 100, preis * 0.9, WENN(menge > 50, preis * 0.95, preis))</code>
+                        <code>WENN(menge > 100; preis * 0.9; WENN(menge > 50; preis * 0.95; preis))</code>
                     </div>
 
                     <div class="ecp-example-box">
                         <h4><?php _e('BMI-Rechner', 'excel-calculator-pro'); ?></h4>
                         <p><strong><?php _e('Body Mass Index:', 'excel-calculator-pro'); ?></strong></p>
-                        <code>RUNDEN(gewicht / POW(groesse/100, 2), 1)</code>
+                        <code>RUNDEN(gewicht / POW(groesse/100; 2); 1)</code>
                     </div>
 
                     <div class="ecp-example-box">
                         <h4><?php _e('Zinseszinsrechnung', 'excel-calculator-pro'); ?></h4>
                         <p><strong><?php _e('Endkapital:', 'excel-calculator-pro'); ?></strong></p>
-                        <code>startkapital * POW(1 + zinssatz/100, jahre)</code>
+                        <code>startkapital * POW(1 + zinssatz/100; jahre)</code>
                     </div>
                 </div>
             </div>

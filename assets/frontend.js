@@ -80,6 +80,18 @@
 
                 processedFormula = this.processFunctions(processedFormula, values);
 
+                // FIX: Add a final check for a top-level function that may have been missed.
+                const topLevelRegex = /^\s*([A-Z_]+)\s*\((.*)\)\s*$/i;
+                const match = processedFormula.match(topLevelRegex);
+
+                if (match && this.functions[match[1].toUpperCase()]) {
+                    const funcName = match[1].toUpperCase();
+                    const args = match[2];
+                    const result = this.functions[funcName](args, values);
+                    return isFinite(result) && !isNaN(result) ? result : 0;
+                }
+                // END FIX
+
                 if (debug) {
                     console.log('Original:', formula);
                     console.log('Processed:', processedFormula);
