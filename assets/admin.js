@@ -1,5 +1,5 @@
 /**
- * Excel Calculator Pro - Verbessertes Admin JavaScript
+ * Excel Calculator Pro - Korrigiertes Admin JavaScript
  */
 
 (function ($) {
@@ -19,38 +19,98 @@
         }
 
         init() {
+            // Initialize modules FIRST
+            this.calculator = new CalculatorManager(this);
+            this.ui = new UIManager(this);
+            this.notifications = new NotificationManager();
+
+            // Then bind events and other initializations
             this.bindEvents();
             this.initializeSortables();
             this.initializeColorPickers();
             this.setupUnsavedChangesWarning();
-
-            // Initialize modules
-            this.calculator = new CalculatorManager(this);
-            this.ui = new UIManager(this);
-            this.notifications = new NotificationManager();
         }
 
         bindEvents() {
             // Calculator management
-            $(document).on('click', '#ecp-new-calculator, #ecp-new-calculator-empty', () => this.calculator.newCalculator());
-            $(document).on('click', '.ecp-edit-calc', (e) => this.calculator.editCalculator($(e.currentTarget).data('id')));
-            $(document).on('click', '.ecp-delete-calc', (e) => this.calculator.deleteCalculator($(e.currentTarget).data('id')));
-            $(document).on('click', '.ecp-duplicate-calc', (e) => this.calculator.duplicateCalculator($(e.currentTarget).data('id')));
+            $(document).on('click', '#ecp-new-calculator, #ecp-new-calculator-empty', (e) => {
+                e.preventDefault();
+                this.calculator.newCalculator();
+            });
+
+            $(document).on('click', '.ecp-edit-calc', (e) => {
+                e.preventDefault();
+                this.calculator.editCalculator($(e.currentTarget).data('id'));
+            });
+
+            $(document).on('click', '.ecp-delete-calc', (e) => {
+                e.preventDefault();
+                this.calculator.deleteCalculator($(e.currentTarget).data('id'));
+            });
+
+            $(document).on('click', '.ecp-duplicate-calc', (e) => {
+                e.preventDefault();
+                this.calculator.duplicateCalculator($(e.currentTarget).data('id'));
+            });
 
             // Editor actions
-            $(document).on('click', '#ecp-save-calculator', () => this.calculator.save());
-            $(document).on('click', '#ecp-cancel-edit', () => this.calculator.cancelEdit());
-            $(document).on('click', '#ecp-delete-calculator', () => this.calculator.deleteFromEditor());
-            $(document).on('click', '#ecp-duplicate-calculator', () => this.calculator.duplicateFromEditor());
+            $(document).on('click', '#ecp-save-calculator', (e) => {
+                e.preventDefault();
+                this.calculator.save();
+            });
+
+            $(document).on('click', '#ecp-cancel-edit', (e) => {
+                e.preventDefault();
+                this.calculator.cancelEdit();
+            });
+
+            $(document).on('click', '#ecp-delete-calculator', (e) => {
+                e.preventDefault();
+                this.calculator.deleteFromEditor();
+            });
+
+            $(document).on('click', '#ecp-duplicate-calculator', (e) => {
+                e.preventDefault();
+                this.calculator.duplicateFromEditor();
+            });
 
             // Field management
-            $(document).on('click', '#ecp-add-field', () => this.addField());
-            $(document).on('click', '#ecp-add-output', () => this.addOutput());
-            $(document).on('click', '.ecp-remove-field', (e) => this.removeField($(e.currentTarget)));
-            $(document).on('click', '.ecp-remove-output', (e) => this.removeOutput($(e.currentTarget)));
+            $(document).on('click', '#ecp-add-field', (e) => {
+                e.preventDefault();
+                this.addField();
+            });
+
+            $(document).on('click', '#ecp-add-output', (e) => {
+                e.preventDefault();
+                this.addOutput();
+            });
+
+            $(document).on('click', '.ecp-remove-field', (e) => {
+                e.preventDefault();
+                this.removeField($(e.currentTarget));
+            });
+
+            $(document).on('click', '.ecp-remove-output', (e) => {
+                e.preventDefault();
+                this.removeOutput($(e.currentTarget));
+            });
 
             // Copy shortcode
-            $(document).on('click', '.ecp-copy-shortcode', (e) => this.copyShortcode($(e.currentTarget)));
+            $(document).on('click', '.ecp-copy-shortcode', (e) => {
+                e.preventDefault();
+                this.copyShortcode($(e.currentTarget));
+            });
+
+            // Export/Import buttons
+            $(document).on('click', '#ecp-export-calculator', (e) => {
+                e.preventDefault();
+                this.exportCalculator();
+            });
+
+            $(document).on('click', '#ecp-import-calculator', (e) => {
+                e.preventDefault();
+                this.importCalculator();
+            });
 
             // Form changes
             $(document).on('input change', '#ecp-calculator-editor input, #ecp-calculator-editor textarea, #ecp-calculator-editor select',
@@ -58,6 +118,18 @@
 
             // Keyboard shortcuts
             $(document).on('keydown', (e) => this.handleKeyboardShortcuts(e));
+
+            // File input change for import
+            $(document).on('change', '#import-file', () => {
+                const fileInput = document.getElementById('import-file');
+                const importBtn = document.getElementById('ecp-import-calculator');
+
+                if (fileInput.files.length > 0) {
+                    importBtn.disabled = false;
+                } else {
+                    importBtn.disabled = true;
+                }
+            });
         }
 
         initializeSortables() {
@@ -351,6 +423,91 @@
             }, 2000);
         }
 
+        exportCalculator() {
+            const calculatorId = $('#export-calculator-select').val();
+
+            if (!calculatorId) {
+                this.notifications.error('Bitte wählen Sie einen Kalkulator aus.');
+                return;
+            }
+
+            this.ui.showLoading();
+
+            $.ajax({
+                url: ecp_admin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'ecp_export_calculator',
+                    nonce: ecp_admin.nonce,
+                    calculator_id: calculatorId
+                },
+                success: (response) => {
+                    this.ui.hideLoading();
+
+                    if (response.success) {
+                        // Create download
+                        const dataStr = JSON.stringify(response.data.data, null, 2);
+                        const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+
+                        const exportFileDefaultName = response.data.filename;
+
+                        const linkElement = document.createElement('a');
+                        linkElement.setAttribute('href', dataUri);
+                        linkElement.setAttribute('download', exportFileDefaultName);
+                        linkElement.click();
+
+                        this.notifications.success(response.data.message);
+                    } else {
+                        this.notifications.error(response.data.message || 'Exportfehler');
+                    }
+                },
+                error: () => {
+                    this.ui.hideLoading();
+                    this.notifications.error('Verbindungsfehler');
+                }
+            });
+        }
+
+        importCalculator() {
+            const fileInput = document.getElementById('import-file');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                this.notifications.error('Bitte wählen Sie eine Datei aus.');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('action', 'ecp_import_calculator');
+            formData.append('nonce', ecp_admin.nonce);
+            formData.append('import_file', file);
+
+            this.ui.showLoading();
+
+            $.ajax({
+                url: ecp_admin.ajax_url,
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                success: (response) => {
+                    this.ui.hideLoading();
+
+                    if (response.success) {
+                        this.notifications.success(response.data.message);
+                        // Reload page to show new calculator
+                        location.reload();
+                    } else {
+                        this.notifications.error(response.data.message || 'Importfehler');
+                    }
+                },
+                error: () => {
+                    this.ui.hideLoading();
+                    this.notifications.error('Verbindungsfehler');
+                }
+            });
+        }
+
         handleKeyboardShortcuts(e) {
             // Ctrl+S oder Cmd+S
             if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -426,7 +583,7 @@
     }
 
     /**
-     * Calculator Management Class (unverändert)
+     * Calculator Management Class
      */
     class CalculatorManager {
         constructor(admin) {
@@ -554,6 +711,58 @@
             });
         }
 
+        duplicateCalculator(calculatorId) {
+            this.admin.ui.showLoading();
+
+            $.ajax({
+                url: ecp_admin.ajax_url,
+                type: 'POST',
+                data: {
+                    action: 'ecp_get_calculator',
+                    nonce: ecp_admin.nonce,
+                    calculator_id: calculatorId
+                },
+                success: (response) => {
+                    if (response.success) {
+                        const data = response.data;
+                        data.id = 0;
+                        data.name = `${data.name} (Kopie)`;
+
+                        $.ajax({
+                            url: ecp_admin.ajax_url,
+                            type: 'POST',
+                            data: {
+                                action: 'ecp_save_calculator',
+                                nonce: ecp_admin.nonce,
+                                ...data
+                            },
+                            success: (saveResponse) => {
+                                this.admin.ui.hideLoading();
+
+                                if (saveResponse.success) {
+                                    this.admin.notifications.success('Erfolgreich dupliziert');
+                                    location.reload();
+                                } else {
+                                    this.admin.notifications.error(saveResponse.data.message || 'Duplikationsfehler');
+                                }
+                            },
+                            error: () => {
+                                this.admin.ui.hideLoading();
+                                this.admin.notifications.error('Verbindungsfehler');
+                            }
+                        });
+                    } else {
+                        this.admin.ui.hideLoading();
+                        this.admin.notifications.error(response.data.message || 'Fehler beim Laden');
+                    }
+                },
+                error: () => {
+                    this.admin.ui.hideLoading();
+                    this.admin.notifications.error('Verbindungsfehler');
+                }
+            });
+        }
+
         cancelEdit() {
             if (this.checkUnsavedChanges()) {
                 this.hideEditor();
@@ -663,7 +872,7 @@
     }
 
     /**
-     * UI Management Class (unverändert)
+     * UI Management Class
      */
     class UIManager {
         constructor(admin) {
@@ -694,7 +903,7 @@
     }
 
     /**
-     * Notification Management Class (unverändert)
+     * Notification Management Class
      */
     class NotificationManager {
         constructor() {
@@ -754,68 +963,19 @@
 
     // Initialize admin when document is ready
     $(document).ready(() => {
+        // Debug logging
+        console.log('ECP Admin: Initializing...');
+
+        // Check if we're on the right page
+        if (typeof ecp_admin === 'undefined') {
+            console.warn('ECP Admin: ecp_admin object not found');
+            return;
+        }
+
+        console.log('ECP Admin: Found ecp_admin object', ecp_admin);
+
         window.ECPAdmin = new ECPAdmin();
+        console.log('ECP Admin: Initialized successfully');
     });
-
-    handleCopyResult($icon) {
-        if ($icon.hasClass('ecp-copied-feedback')) return;
-
-        const $wrapper = $icon.closest('.ecp-output-wrapper');
-        const $outputField = $wrapper.find('.ecp-output-field');
-        const $outputUnitSpan = $wrapper.find('.ecp-output-unit');
-
-        let valueToCopy = $outputField.text().trim();
-        const unitFromSpan = $outputUnitSpan.length ? $outputUnitSpan.text().trim() : '';
-
-        if (unitFromSpan) {
-            const valueLower = valueToCopy.toLowerCase();
-            const unitLower = unitFromSpan.toLowerCase();
-
-            // Füge die Einheit hinzu, wenn sie nicht bereits Teil des formatierten Wertes ist
-            if (!valueLower.includes(unitLower) && !(valueToCopy.endsWith('%') && unitFromSpan === '%')) {
-                valueToCopy += ' ' + unitFromSpan;
-            }
-        }
-
-        // Moderne Clipboard API oder Fallback
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(valueToCopy).then(() => {
-                this.showCopyFeedback($icon, true);
-            }).catch(() => {
-                this.fallbackCopyToClipboard(valueToCopy, $icon);
-            });
-        } else {
-            this.fallbackCopyToClipboard(valueToCopy, $icon);
-        }
-    }
-
-    fallbackCopyToClipboard(text, $icon) {
-        try {
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            const successful = document.execCommand('copy');
-            document.body.removeChild(textArea);
-            this.showCopyFeedback($icon, successful);
-        } catch (err) {
-            console.error('ECP: Fallback-Kopieren fehlgeschlagen: ', err);
-            this.showCopyFeedback($icon, false);
-        }
-    }
-
-    showCopyFeedback($icon, success) {
-        const originalIconContent = $icon.html();
-        const feedbackIcon = success ? '✅' : '❌';
-        $icon.html(feedbackIcon).addClass('ecp-copied-feedback');
-
-        setTimeout(() => {
-            $icon.html(originalIconContent).removeClass('ecp-copied-feedback');
-        }, success ? 1500 : 2000);
-    }
 
 })(jQuery);
