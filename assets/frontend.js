@@ -802,6 +802,191 @@
             });
             return results;
         }
+
+        // ERGÄNZUNG 1: In der ECPCalculator Klasse init() Methode
+        init() {
+            this.bindEvents();
+            this.initializeValues();
+            this.calculate();
+
+            this.$element.hide().fadeIn(500);
+            this.setupAccessibility();
+
+            // NEUE ZEILE: Data Sharing Event auslösen
+            $(document).trigger('ecp_calculator_ready', [this]);
+        }
+
+        // ERGÄNZUNG 2: In der calculate() Methode, nach erfolgreicher Berechnung
+        calculate() {
+            if (this.isCalculating) return;
+            this.isCalculating = true;
+
+            this.initializeValues();
+
+            try {
+                const results = {}; // NEUE VARIABLE: Ergebnisse sammeln
+
+                this.$element.find('.ecp-output-field').each((index, output) => {
+                    const $output = $(output);
+                    const formula = $output.data('formula');
+                    const format = $output.data('format') || '';
+                    const prevValue = $output.text();
+                    const outputId = $output.data('output-id');
+
+                    if (formula) {
+                        try {
+                            const result = parser.parse(formula, this.values, false);
+                            const formattedResult = this.formatNumber(result, format);
+
+                            // NEUE ZEILE: Ergebnis für Data Sharing sammeln
+                            if (outputId !== undefined) {
+                                results[outputId] = {
+                                    raw_value: result,
+                                    formatted_value: formattedResult,
+                                    label: $output.closest('.ecp-output-group').find('label').text().trim()
+                                };
+                            }
+
+                            if (formattedResult !== prevValue) {
+                                $output.addClass('ecp-value-changed-animation');
+                                setTimeout(() => {
+                                    $output.removeClass('ecp-value-changed-animation');
+                                }, 600);
+                                this.announceChange($output, formattedResult);
+                            }
+                            $output.text(formattedResult);
+                            $output.removeClass('ecp-output-error');
+                        } catch (error) {
+                            $output.text('Fehler').addClass('ecp-output-error');
+                        }
+                    }
+                });
+
+                this.$element.removeClass('ecp-calculator-error-state').addClass('ecp-calculator-success-state');
+
+                // NEUE ZEILEN: Data Sharing Event auslösen
+                const calculatorId = this.$element.data('calculator-id');
+                if (calculatorId && Object.keys(results).length > 0) {
+                    $(document).trigger('ecp_calculation_complete', [calculatorId, results]);
+                }
+
+            } catch (error) {
+                this.$element.addClass('ecp-calculator-error-state').removeClass('ecp-calculator-success-state');
+            } finally {
+                this.isCalculating = false;
+            }
+        }
+
+        // ERGÄNZUNG 3: Neue Methode zur ECPCalculator Klasse hinzufügen
+        /**
+         * Data Sharing Integration - Externe API für Data Sharing System
+         */
+        getDataSharingAPI() {
+            return {
+                getCalculatorId: () => this.$element.data('calculator-id'),
+                getInputValues: () => {
+                    const values = {};
+                    this.$element.find('.ecp-input-field').each((index, input) => {
+                        const $input = $(input);
+                        const fieldId = $input.data('field-id');
+                        const value = $input.val();
+                        if (fieldId && value !== '') {
+                            values[fieldId] = value;
+                        }
+                    });
+                    return values;
+                },
+                setInputValue: (fieldId, value) => {
+                    const $input = this.$element.find(`.ecp-input-field[data-field-id="${fieldId}"]`);
+                    if ($input.length > 0) {
+                        $input.val(value);
+                        this.handleInputChange({ target: $input[0] });
+                        return true;
+                    }
+                    return false;
+                },
+                getResults: () => this.getResults(),
+                recalculate: () => this.recalculate()
+            };
+        }
+
+        // ERGÄNZUNG 4: In der handleInputChange() Methode - Event für Data Sharing hinzufügen
+        handleInputChange(event) {
+            const $input = $(event.target);
+            const fieldId = $input.data('field-id');
+            let value = $input.val();
+
+            if ($input.attr('type') === 'number') {
+                if (value.trim() === '') {
+                    // Leer ist ok
+                } else if (isNaN(parseFloat(value))) {
+                    // Ungültige Eingabe
+                }
+            }
+
+            this.values[fieldId] = parseFloat(value) || 0;
+
+            $input.closest('.ecp-field-group').addClass('ecp-field-changed-animation');
+            setTimeout(() => {
+                $input.closest('.ecp-field-group').removeClass('ecp-field-changed-animation');
+            }, 300);
+
+            this.debouncedCalculate();
+
+            // NEUE ZEILE: Data Sharing über Input-Änderung informieren
+            $(document).trigger('ecp_input_changed', [this.$element.data('calculator-id'), fieldId, value]);
+        }
+
+        window.ECPCalculatorAPI = {
+            getInstance: function (selectorOrElement) {
+                const $element = $(selectorOrElement).first();
+                return $element.length ? $element.data('ecpCalculatorInstance') : null;
+            },
+            recalculateAll: function () {
+                $('.ecp-calculator').each(function () {
+                    const instance = $(this).data('ecpCalculatorInstance');
+                    if (instance && typeof instance.recalculate === 'function') {
+                        instance.recalculate();
+                    }
+                });
+            },
+            parseFormula: function (formula, values, debug = false) {
+                return parser.parse(formula, values, debug);
+            },
+            // NEUE FUNKTIONEN für Data Sharing
+            getDataSharingAPI: function (selectorOrElement) {
+                const instance = this.getInstance(selectorOrElement);
+                return instance ? instance.getDataSharingAPI() : null;
+            },
+            getAllCalculatorData: function () {
+                const data = {};
+                $('.ecp-calculator').each(function () {
+                    const $calc = $(this);
+                    const calculatorId = $calc.data('calculator-id');
+                    const instance = $calc.data('ecpCalculatorInstance');
+
+                    if (calculatorId && instance) {
+                        const api = instance.getDataSharingAPI();
+                        data[calculatorId] = {
+                            inputs: api.getInputValues(),
+                            outputs: api.getResults(),
+                            name: $calc.find('.ecp-calculator-title').first().text().trim() || `Kalkulator ${calculatorId}`
+                        };
+                    }
+                });
+                return data;
+            },
+            setCalculatorInput: function (calculatorId, fieldId, value) {
+                const $calculator = $(`.ecp-calculator[data-calculator-id="${calculatorId}"]`);
+                const instance = $calculator.data('ecpCalculatorInstance');
+
+                if (instance) {
+                    const api = instance.getDataSharingAPI();
+                    return api.setInputValue(fieldId, value);
+                }
+                return false;
+            }
+        };
     }
 
     $.fn.ecpCalculator = function (options) {

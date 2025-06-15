@@ -154,6 +154,10 @@ class ECP_Admin
                 'title' => __('Kalkulatoren', 'excel-calculator-pro'),
                 'icon' => 'dashicons-list-view'
             ),
+            'data-sharing' => array(
+                'title' => __('Datenübertragung', 'excel-calculator-pro'),
+                'icon' => 'dashicons-share'
+            ),
             'formulas' => array(
                 'title' => __('Formel-Referenz', 'excel-calculator-pro'),
                 'icon' => 'dashicons-editor-code'
@@ -186,6 +190,9 @@ class ECP_Admin
         echo '<div class="ecp-tab-content">';
 
         switch ($current_tab) {
+            case 'data-sharing':
+                $this->data_sharing_tab();
+                break;
             case 'formulas':
                 $this->formulas_reference_tab();
                 break;
@@ -201,6 +208,63 @@ class ECP_Admin
         }
 
         echo '</div>';
+    }
+
+    private function data_sharing_tab()
+    {
+        // Data Sharing Instanz holen
+        $data_sharing = ecp_init()->get_data_sharing();
+
+        if ($data_sharing) {
+            $data_sharing->render_admin_tab();
+        } else {
+            echo '<div class="ecp-error">Data Sharing System nicht verfügbar.</div>';
+        }
+    }
+
+
+    public function admin_enqueue_scripts($hook)
+    {
+        if ($hook !== $this->page_hook) {
+            return;
+        }
+
+        // Modern admin assets
+        wp_enqueue_script('wp-color-picker');
+        wp_enqueue_style('wp-color-picker');
+
+        wp_enqueue_script(
+            'ecp-admin-js',
+            ECP_PLUGIN_URL . 'assets/admin.js',
+            array('jquery', 'jquery-ui-sortable', 'wp-color-picker'),
+            ECP_VERSION,
+            true
+        );
+
+        wp_enqueue_style(
+            'ecp-admin-css',
+            ECP_PLUGIN_URL . 'assets/admin.css',
+            array('wp-color-picker'),
+            ECP_VERSION
+        );
+
+        // Data Sharing Admin Assets nur auf Data Sharing Tab
+        if (isset($_GET['tab']) && $_GET['tab'] === 'data-sharing') {
+            wp_enqueue_script(
+                'ecp-data-sharing-admin-js',
+                ECP_PLUGIN_URL . 'assets/data-sharing-admin.js',
+                array('ecp-admin-js'),
+                ECP_VERSION,
+                true
+            );
+        }
+
+        // Localization
+        wp_localize_script('ecp-admin-js', 'ecp_admin', array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'nonce' => wp_create_nonce('ecp_admin_nonce'),
+            'strings' => $this->get_admin_strings()
+        ));
     }
 
     private function calculators_tab()

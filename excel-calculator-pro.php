@@ -4,7 +4,7 @@
  * Plugin Name: Excel Calculator Pro
  * Plugin URI: https://samuelbaer.ch/
  * Description: Excel-ähnliche Kalkulatoren mit Echtzeit-Berechnung und Formelunterstützung
- * Version: 3.9.9
+ * Version: 4.0.1
  * Author: Samuel Baer
  * License: GPL v2 or later
  * Text Domain: excel-calculator-pro
@@ -55,6 +55,11 @@ class ExcelCalculatorPro
      * Shortcode-Handler
      */
     private $shortcode;
+
+    /**
+     * Data Sharing Handler
+     */
+    private $data_sharing;
 
     /**
      * Plugin initialisiert
@@ -148,12 +153,16 @@ class ExcelCalculatorPro
         require_once ECP_PLUGIN_PATH . 'includes/class-ecp-frontend.php';
         require_once ECP_PLUGIN_PATH . 'includes/class-ecp-shortcode.php';
 
+        // Data Sharing Klasse laden
+        require_once ECP_PLUGIN_PATH . 'includes/class-ecp-data-sharing.php';
+
         // Prüfen ob alle Dateien existieren
         $required_files = array(
             ECP_PLUGIN_PATH . 'includes/class-ecp-database.php',
             ECP_PLUGIN_PATH . 'includes/class-ecp-admin.php',
             ECP_PLUGIN_PATH . 'includes/class-ecp-frontend.php',
-            ECP_PLUGIN_PATH . 'includes/class-ecp-shortcode.php'
+            ECP_PLUGIN_PATH . 'includes/class-ecp-shortcode.php',
+            ECP_PLUGIN_PATH . 'includes/class-ecp-data-sharing.php'
         );
 
         foreach ($required_files as $file) {
@@ -183,6 +192,7 @@ class ExcelCalculatorPro
             $this->admin = new ECP_Admin($this->database);
             $this->frontend = new ECP_Frontend($this->database);
             $this->shortcode = new ECP_Shortcode($this->database);
+            $this->data_sharing = new ECP_Data_Sharing($this->database);
         }
     }
 
@@ -272,6 +282,7 @@ class ExcelCalculatorPro
             'ecp_version',
             'ecp_general_settings',
             'ecp_color_settings',
+            'ecp_data_sharing_settings',
             'ecp_activation_date',
             'ecp_delete_data_on_uninstall',
             'ecp_db_version'
@@ -360,6 +371,14 @@ class ExcelCalculatorPro
     public function get_shortcode()
     {
         return $this->shortcode;
+    }
+
+    /**
+     * Getter für Data Sharing Handler
+     */
+    public function get_data_sharing()
+    {
+        return $this->data_sharing;
     }
 
     /**

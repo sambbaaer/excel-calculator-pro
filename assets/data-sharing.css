@@ -1,0 +1,446 @@
+/* Excel Calculator Pro - Data Sharing Styles */
+
+/* ==========================================================================
+   Shared Data Badges - Subtile UI-Hinweise
+   ========================================================================== */
+
+.ecp-shared-data-badge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, var(--ecp-primary-color, #007cba) 0%, var(--ecp-secondary-color, #00a0d2) 100%);
+    color: white;
+    font-size: 10px;
+    line-height: 1;
+    padding: 3px 4px;
+    border-radius: 50%;
+    min-width: 16px;
+    height: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 124, 186, 0.3);
+    z-index: 10;
+
+    /* Startzustand: unsichtbar */
+    opacity: 0;
+    transform: scale(0.5);
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Sicherstellen, dass das Parent-Element relative Position hat */
+    user-select: none;
+}
+
+.ecp-shared-data-badge.ecp-badge-visible {
+    opacity: 1;
+    transform: scale(1);
+}
+
+.ecp-shared-data-badge:hover {
+    opacity: 0.9;
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 124, 186, 0.4);
+}
+
+/* Sicherstellen, dass Input-Wrapper relative Position hat für Badge-Positionierung */
+.ecp-input-wrapper {
+    position: relative;
+}
+
+/* ==========================================================================
+   Animations für Data Loading
+   ========================================================================== */
+
+.ecp-data-loaded-animation {
+    animation: ecpDataLoadedPulse 1s ease-out;
+}
+
+@keyframes ecpDataLoadedPulse {
+    0% {
+        background-color: rgba(var(--ecp-primary-color-rgb, 0, 124, 186), 0.1);
+        transform: scale(1);
+    }
+
+    50% {
+        background-color: rgba(var(--ecp-primary-color-rgb, 0, 124, 186), 0.2);
+        transform: scale(1.02);
+    }
+
+    100% {
+        background-color: transparent;
+        transform: scale(1);
+    }
+}
+
+/* Pulse-Animation für Badge beim ersten Erscheinen */
+@keyframes ecpBadgePulse {
+
+    0%,
+    100% {
+        box-shadow: 0 2px 6px rgba(0, 124, 186, 0.3);
+    }
+
+    50% {
+        box-shadow: 0 2px 6px rgba(0, 124, 186, 0.6), 0 0 20px rgba(0, 124, 186, 0.2);
+    }
+}
+
+.ecp-shared-data-badge.ecp-badge-new {
+    animation: ecpBadgePulse 2s ease-in-out;
+}
+
+/* ==========================================================================
+   Tooltip System für Badge-Informationen
+   ========================================================================== */
+
+.ecp-shared-data-badge[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    right: 50%;
+    transform: translateX(50%);
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: normal;
+    white-space: nowrap;
+    z-index: 1000;
+    margin-bottom: 5px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+
+    /* Animation */
+    opacity: 0;
+    animation: ecpTooltipFadeIn 0.2s ease-out forwards;
+}
+
+.ecp-shared-data-badge[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    right: 50%;
+    transform: translateX(50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(0, 0, 0, 0.9);
+    z-index: 1000;
+    margin-bottom: -5px;
+
+    /* Animation */
+    opacity: 0;
+    animation: ecpTooltipFadeIn 0.2s ease-out forwards;
+}
+
+@keyframes ecpTooltipFadeIn {
+    from {
+        opacity: 0;
+        transform: translateX(50%) translateY(5px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(50%) translateY(0);
+    }
+}
+
+/* ==========================================================================
+   Data Sharing Status Indicators
+   ========================================================================== */
+
+.ecp-calculator.ecp-has-shared-data::before {
+    content: '';
+    position: absolute;
+    top: 8px;
+    left: 8px;
+    width: 8px;
+    height: 8px;
+    background: linear-gradient(135deg, var(--ecp-success-color, #28a745) 0%, #20c997 100%);
+    border-radius: 50%;
+    z-index: 5;
+    box-shadow: 0 0 0 2px white, 0 2px 4px rgba(40, 167, 69, 0.3);
+    opacity: 0.8;
+}
+
+.ecp-calculator.ecp-sharing-active::after {
+    content: '🔄';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 12px;
+    opacity: 0.6;
+    z-index: 5;
+    animation: ecpSharingRotate 3s linear infinite;
+}
+
+@keyframes ecpSharingRotate {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ==========================================================================
+   Admin-Interface Improvements für Data Sharing
+   ========================================================================== */
+
+.ecp-calculator-sharing-card {
+    transition: all 0.3s ease;
+}
+
+.ecp-calculator-sharing-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ecp-setting-group {
+    position: relative;
+}
+
+.ecp-setting-group.ecp-enabled::before {
+    content: '';
+    position: absolute;
+    left: -15px;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--ecp-primary-color, #007cba);
+    border-radius: 2px;
+}
+
+/* Toggle-Style für Checkboxes in Admin */
+.ecp-setting-group input[type="checkbox"] {
+    appearance: none;
+    width: 44px;
+    height: 24px;
+    background: #ddd;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-right: 8px;
+    flex-shrink: 0;
+}
+
+.ecp-setting-group input[type="checkbox"]:checked {
+    background: var(--ecp-primary-color, #007cba);
+}
+
+.ecp-setting-group input[type="checkbox"]::before {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 20px;
+    height: 20px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.ecp-setting-group input[type="checkbox"]:checked::before {
+    transform: translateX(20px);
+}
+
+/* ==========================================================================
+   Field Mapping Interface
+   ========================================================================== */
+
+.ecp-mappings-container {
+    border: 1px solid #e1e5e9;
+    border-radius: 6px;
+    padding: 15px;
+    background: #f8f9fa;
+    margin: 10px 0;
+}
+
+.ecp-mapping-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px;
+    background: white;
+    border-radius: 4px;
+    margin-bottom: 10px;
+    border: 1px solid #e9ecef;
+}
+
+.ecp-mapping-row:last-child {
+    margin-bottom: 0;
+}
+
+.ecp-mapping-arrow {
+    color: var(--ecp-primary-color, #007cba);
+    font-weight: bold;
+    text-align: center;
+}
+
+.ecp-remove-mapping {
+    background: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.ecp-remove-mapping:hover {
+    background: #c82333;
+}
+
+/* ==========================================================================
+   Responsive Design für Data Sharing
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .ecp-shared-data-badge {
+        top: -6px;
+        right: -6px;
+        min-width: 14px;
+        height: 14px;
+        font-size: 9px;
+        padding: 2px 3px;
+    }
+
+    .ecp-calculators-sharing-grid {
+        grid-template-columns: 1fr !important;
+    }
+
+    .ecp-mapping-row {
+        grid-template-columns: 1fr;
+        text-align: center;
+    }
+
+    .ecp-mapping-arrow::before {
+        content: '↓';
+    }
+}
+
+/* ==========================================================================
+   Dark Mode Support für Data Sharing
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .ecp-shared-data-badge {
+        box-shadow: 0 2px 6px rgba(0, 160, 210, 0.4);
+    }
+
+    .ecp-shared-data-badge:hover {
+        box-shadow: 0 4px 12px rgba(0, 160, 210, 0.6);
+    }
+
+    .ecp-calculator.ecp-has-shared-data::before {
+        box-shadow: 0 0 0 2px #2d2d2d, 0 2px 4px rgba(52, 211, 153, 0.4);
+    }
+
+    .ecp-mappings-container {
+        background: #2a2a2a;
+        border-color: #404040;
+    }
+
+    .ecp-mapping-row {
+        background: #1e1e1e;
+        border-color: #404040;
+    }
+}
+
+/* ==========================================================================
+   Accessibility Improvements
+   ========================================================================== */
+
+.ecp-shared-data-badge:focus {
+    outline: 2px solid var(--ecp-primary-color, #007cba);
+    outline-offset: 2px;
+}
+
+/* Screen reader only content */
+.ecp-sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+
+    .ecp-shared-data-badge,
+    .ecp-data-loaded-animation {
+        transition: none !important;
+        animation: none !important;
+    }
+}
+
+/* ==========================================================================
+   Loading States
+   ========================================================================== */
+
+.ecp-calculator.ecp-loading-shared-data {
+    position: relative;
+    opacity: 0.7;
+}
+
+.ecp-calculator.ecp-loading-shared-data::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--ecp-border-color, #e1e5e9);
+    border-top: 2px solid var(--ecp-primary-color, #007cba);
+    border-radius: 50%;
+    animation: ecpLoadingSpin 1s linear infinite;
+    transform: translate(-50%, -50%);
+    z-index: 100;
+}
+
+@keyframes ecpLoadingSpin {
+    0% {
+        transform: translate(-50%, -50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translate(-50%, -50%) rotate(360deg);
+    }
+}
+
+/* ==========================================================================
+   Success States
+   ========================================================================== */
+
+.ecp-data-sharing-success {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: var(--ecp-success-color, #28a745);
+    color: white;
+    padding: 12px 20px;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(40, 167, 69, 0.3);
+    z-index: 10000;
+    animation: ecpSuccessSlideIn 0.3s ease-out;
+}
+
+@keyframes ecpSuccessSlideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
