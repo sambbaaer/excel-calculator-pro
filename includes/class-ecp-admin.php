@@ -78,6 +78,17 @@ class ECP_Admin
             ECP_VERSION
         );
 
+        // Data Sharing Admin Assets nur auf Data Sharing Tab
+        if (isset($_GET['tab']) && $_GET['tab'] === 'data-sharing') {
+            wp_enqueue_script(
+                'ecp-data-sharing-admin-js',
+                ECP_PLUGIN_URL . 'assets/data-sharing-admin.js',
+                array('ecp-admin-js'),
+                ECP_VERSION,
+                true
+            );
+        }
+
         // Localization
         wp_localize_script('ecp-admin-js', 'ecp_admin', array(
             'ajax_url' => admin_url('admin-ajax.php'),
@@ -220,51 +231,6 @@ class ECP_Admin
         } else {
             echo '<div class="ecp-error">Data Sharing System nicht verfügbar.</div>';
         }
-    }
-
-
-    public function admin_enqueue_scripts($hook)
-    {
-        if ($hook !== $this->page_hook) {
-            return;
-        }
-
-        // Modern admin assets
-        wp_enqueue_script('wp-color-picker');
-        wp_enqueue_style('wp-color-picker');
-
-        wp_enqueue_script(
-            'ecp-admin-js',
-            ECP_PLUGIN_URL . 'assets/admin.js',
-            array('jquery', 'jquery-ui-sortable', 'wp-color-picker'),
-            ECP_VERSION,
-            true
-        );
-
-        wp_enqueue_style(
-            'ecp-admin-css',
-            ECP_PLUGIN_URL . 'assets/admin.css',
-            array('wp-color-picker'),
-            ECP_VERSION
-        );
-
-        // Data Sharing Admin Assets nur auf Data Sharing Tab
-        if (isset($_GET['tab']) && $_GET['tab'] === 'data-sharing') {
-            wp_enqueue_script(
-                'ecp-data-sharing-admin-js',
-                ECP_PLUGIN_URL . 'assets/data-sharing-admin.js',
-                array('ecp-admin-js'),
-                ECP_VERSION,
-                true
-            );
-        }
-
-        // Localization
-        wp_localize_script('ecp-admin-js', 'ecp_admin', array(
-            'ajax_url' => admin_url('admin-ajax.php'),
-            'nonce' => wp_create_nonce('ecp_admin_nonce'),
-            'strings' => $this->get_admin_strings()
-        ));
     }
 
     private function calculators_tab()
@@ -524,104 +490,6 @@ class ECP_Admin
         </style>
     <?php
     }
-
-    // ... (Rest der Methoden bleibt unverändert bis auf die sanitize_formulas Methode)
-
-    private function sanitize_formulas($formulas)
-    {
-        if (!is_array($formulas)) {
-            return array();
-        }
-
-        $sanitized = array();
-
-        foreach ($formulas as $formula) {
-            if (!is_array($formula)) {
-                continue;
-            }
-
-            $sanitized_formula = $this->sanitize_single_formula($formula);
-
-            if ($sanitized_formula) {
-                $sanitized[] = $sanitized_formula;
-            }
-        }
-
-        return $sanitized;
-    }
-
-    private function sanitize_single_formula($formula)
-    {
-        if (empty($formula['label'])) {
-            return null;
-        }
-
-        $sanitized = array();
-
-        // Label validation
-        $sanitized['label'] = sanitize_text_field($formula['label']);
-        if (strlen($sanitized['label']) > 255) {
-            throw new InvalidArgumentException(__('Formel-Label ist zu lang.', 'excel-calculator-pro'));
-        }
-
-        // Formula validation - vereinfacht, um den Speicher-Bug zu beheben
-        $sanitized['formula'] = $this->simple_formula_validation($formula['formula'] ?? '');
-
-        // Format validation
-        $allowed_formats = array('', 'currency', 'percentage', 'integer', 'text');
-        $sanitized['format'] = in_array($formula['format'] ?? '', $allowed_formats)
-            ? $formula['format'] : '';
-
-        // Other fields
-        foreach (array('unit', 'help') as $field) {
-            if (isset($formula[$field])) {
-                $sanitized[$field] = sanitize_text_field($formula[$field]);
-            }
-        }
-
-        return $sanitized;
-    }
-
-    /**
-     * Vereinfachte Formel-Validierung um Speicher-Bug zu beheben
-     */
-    private function simple_formula_validation($formula)
-    {
-        if (!is_string($formula)) {
-            throw new InvalidArgumentException(__('Formel muss ein String sein.', 'excel-calculator-pro'));
-        }
-
-        $formula = trim($formula);
-
-        // Check formula length
-        if (strlen($formula) > 5000) {
-            throw new InvalidArgumentException(__('Formel ist zu lang (max. 5000 Zeichen).', 'excel-calculator-pro'));
-        }
-
-        // Basic security checks - gefährliche Muster
-        $dangerous_patterns = array(
-            'eval(',
-            'exec(',
-            'system(',
-            'shell_exec(',
-            'file_get_contents',
-            '<script',
-            'javascript:',
-            'document.',
-            'window.'
-        );
-
-        $formula_lower = strtolower($formula);
-        foreach ($dangerous_patterns as $pattern) {
-            if (strpos($formula_lower, $pattern) !== false) {
-                throw new InvalidArgumentException(__('Formel enthält nicht erlaubte Funktionen.', 'excel-calculator-pro'));
-            }
-        }
-
-        return $formula;
-    }
-
-    // ... (Rest der Klasse bleibt unverändert)
 
     private function import_export_tab()
     {
@@ -1065,6 +933,100 @@ class ECP_Admin
         }
 
         return $sanitized;
+    }
+
+    private function sanitize_formulas($formulas)
+    {
+        if (!is_array($formulas)) {
+            return array();
+        }
+
+        $sanitized = array();
+
+        foreach ($formulas as $formula) {
+            if (!is_array($formula)) {
+                continue;
+            }
+
+            $sanitized_formula = $this->sanitize_single_formula($formula);
+
+            if ($sanitized_formula) {
+                $sanitized[] = $sanitized_formula;
+            }
+        }
+
+        return $sanitized;
+    }
+
+    private function sanitize_single_formula($formula)
+    {
+        if (empty($formula['label'])) {
+            return null;
+        }
+
+        $sanitized = array();
+
+        // Label validation
+        $sanitized['label'] = sanitize_text_field($formula['label']);
+        if (strlen($sanitized['label']) > 255) {
+            throw new InvalidArgumentException(__('Formel-Label ist zu lang.', 'excel-calculator-pro'));
+        }
+
+        // Formula validation - vereinfacht, um den Speicher-Bug zu beheben
+        $sanitized['formula'] = $this->simple_formula_validation($formula['formula'] ?? '');
+
+        // Format validation
+        $allowed_formats = array('', 'currency', 'percentage', 'integer', 'text');
+        $sanitized['format'] = in_array($formula['format'] ?? '', $allowed_formats)
+            ? $formula['format'] : '';
+
+        // Other fields
+        foreach (array('unit', 'help') as $field) {
+            if (isset($formula[$field])) {
+                $sanitized[$field] = sanitize_text_field($formula[$field]);
+            }
+        }
+
+        return $sanitized;
+    }
+
+    /**
+     * Vereinfachte Formel-Validierung um Speicher-Bug zu beheben
+     */
+    private function simple_formula_validation($formula)
+    {
+        if (!is_string($formula)) {
+            throw new InvalidArgumentException(__('Formel muss ein String sein.', 'excel-calculator-pro'));
+        }
+
+        $formula = trim($formula);
+
+        // Check formula length
+        if (strlen($formula) > 5000) {
+            throw new InvalidArgumentException(__('Formel ist zu lang (max. 5000 Zeichen).', 'excel-calculator-pro'));
+        }
+
+        // Basic security checks - gefährliche Muster
+        $dangerous_patterns = array(
+            'eval(',
+            'exec(',
+            'system(',
+            'shell_exec(',
+            'file_get_contents',
+            '<script',
+            'javascript:',
+            'document.',
+            'window.'
+        );
+
+        $formula_lower = strtolower($formula);
+        foreach ($dangerous_patterns as $pattern) {
+            if (strpos($formula_lower, $pattern) !== false) {
+                throw new InvalidArgumentException(__('Formel enthält nicht erlaubte Funktionen.', 'excel-calculator-pro'));
+            }
+        }
+
+        return $formula;
     }
 
     private function sanitize_settings($settings)
